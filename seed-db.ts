@@ -62,6 +62,9 @@ async function main() {
 
   const dbFile = Bun.file("./db.json");
   const db = await dbFile.json();
+  db.lastUpdate = hourlyData[hourlyData.length - 1].date;
+  db.subscribers = lastSubscribers;
+  db.hourlyGains = hourlySubscribersGained;
   db.history = hourlyData;
   await Bun.write("./db.json", JSON.stringify(db, null, 2));
 }
