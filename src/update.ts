@@ -140,6 +140,17 @@ export async function updateTask() {
           )
           .join("\n"),
       },
+      {
+        name: "Top 10 Highest Hourly Gains",
+        value: history
+          .sort((a, b) => b.gained - a.gained)
+          .slice(0, 10)
+          .map(
+            (d) =>
+              `${formatEasternTime(new Date(d.date))}: **${gain(d.gained)}**`,
+          )
+          .join("\n"),
+      },
     ],
     footer: {
       text: "Made by ToastedToast (@nottca) for MrBeast Statistics",
