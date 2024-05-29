@@ -4,17 +4,9 @@ interface Database {
   mrbeastData: {
     lastUpdate: number;
     subscribers: number;
-    hourlyGains: number;
   };
-  tseriesData: {
-    lastUpdate: number;
-    subscribers: number;
-    hourlyGains: number;
-  };
-  differenceData: {
-    difference: number;
-    hourlyGains: number;
-  };
+  tseriesSubscribers: number;
+  difference: number;
   history: {
     date: number;
     subscribers: number;
@@ -30,17 +22,9 @@ async function initDatabase() {
         mrbeastData: {
           lastUpdate: 0,
           subscribers: 0,
-          hourlyGains: 0,
         },
-        tseriesData: {
-          lastUpdate: 0,
-          subscribers: 0,
-          hourlyGains: 0,
-        },
-        differenceData: {
-          difference: 0,
-          hourlyGains: 0,
-        },
+        tseriesSubscribers: 0,
+        difference: 0,
         history: [],
       } satisfies Database),
     );
@@ -50,21 +34,38 @@ async function initDatabase() {
 await initDatabase();
 
 const dbFile = Bun.file("./db.json");
-const db: Database = await dbFile.json();
+let db: Database = await dbFile.json();
+
+function updateDb() {
+  const data = db as any;
+  delete data.mrbeastData.hourlyGains;
+  if (data.tseriesData) {
+    data.tseriesSubscribers = data.tseriesData.subscribers;
+    delete data.tseriesData;
+  }
+  if (data.differenceData) {
+    data.difference = data.differenceData.difference;
+    delete data.differenceData;
+  }
+  db = {
+    mrbeastData: data.mrbeastData,
+    tseriesSubscribers: data.tseriesSubscribers,
+    difference: data.difference,
+    history: data.history,
+  };
+  save();
+}
+
+updateDb();
 
 export function getLastStats() {
   return {
     mrbeast: {
       update: db.mrbeastData.lastUpdate,
       subscribers: db.mrbeastData.subscribers,
-      hourlyGains: db.mrbeastData.hourlyGains,
     },
-    tseries: {
-      update: db.tseriesData.lastUpdate,
-      subscribers: db.tseriesData.subscribers,
-      hourlyGains: db.tseriesData.hourlyGains,
-    },
-    difference: db.differenceData.difference,
+    tseriesSubscribers: db.tseriesSubscribers,
+    difference: db.difference,
   };
 }
 
@@ -73,19 +74,11 @@ export function updateStats(data: {
   tseriesSubscribers: number;
 }) {
   db.mrbeastData.lastUpdate = new Date().getTime();
-  db.tseriesData.lastUpdate = new Date().getTime();
 
   const mrbeastGained = data.mrbeastSubscribers - db.mrbeastData.subscribers;
   db.mrbeastData.subscribers = data.mrbeastSubscribers;
-  db.mrbeastData.hourlyGains = mrbeastGained;
-
-  db.tseriesData.hourlyGains =
-    data.tseriesSubscribers - db.tseriesData.subscribers;
-  db.tseriesData.subscribers = data.tseriesSubscribers;
-
-  const difference = data.tseriesSubscribers - data.mrbeastSubscribers;
-  db.differenceData.hourlyGains = difference - db.differenceData.difference;
-  db.differenceData.difference = difference;
+  db.tseriesSubscribers = data.tseriesSubscribers;
+  db.difference = data.tseriesSubscribers - data.mrbeastSubscribers;
 
   db.history.push({
     date: new Date().getTime(),

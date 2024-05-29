@@ -148,7 +148,7 @@ export async function updateTask() {
     (timeTook / 1000);
   const lastHour = history[history.length - 1];
   const hourlyGains = mrbeastData.estSubCount - lastHour.subscribers;
-  const hourlyGainsComparedToLast = hourlyGains - lastStats.mrbeast.hourlyGains;
+  const hourlyGainsComparedToLast = hourlyGains - lastHour.gained;
   const difference = tseriesData.estSubCount - mrbeastData.estSubCount;
   const firstDataToday = history.find(
     (d) =>
@@ -217,7 +217,7 @@ export async function updateTask() {
       {
         name: "VS T-Series",
         value: trim(`
-          Subscribers: **${tseriesData.estSubCount.toLocaleString()}** (${gain(tseriesData.estSubCount - lastStats.tseries.subscribers)})
+          Subscribers: **${tseriesData.estSubCount.toLocaleString()}** (${gain(tseriesData.estSubCount - lastStats.tseriesSubscribers)})
           Difference: **${difference.toLocaleString()}** (${gain(difference - lastStats.difference)})
         `),
       },
