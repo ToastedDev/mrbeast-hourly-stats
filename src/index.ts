@@ -9,3 +9,5 @@ const cron = new CronJob(
   "America/New_York",
 );
 cron.start();
+
+console.log("Cron job has started.");
