@@ -257,6 +257,12 @@ export async function updateTask() {
     color: hexToDecimalColor(rate?.color ?? "#ffffff"),
   };
 
+  history.push({
+    date: new Date().getTime(),
+    subscribers: mrbeastData.estSubCount,
+    gained: hourlyGains,
+  });
+
   const subscriberHistoryGraph = await createGraph(
     "Subscriber history since release",
     history.map(
