@@ -142,12 +142,14 @@ export async function updateTask() {
   );
   const [mrbeastData, tseriesData] = (await res.json()) as [NiaData, NiaData];
 
-  const timeTook = currentDate.getTime() - lastStats.update;
+  const timeTook = currentDate.getTime() - lastStats.mrbeast.update;
   const subRate =
-    (mrbeastData.estSubCount - lastStats.subscribers) / (timeTook / 1000);
+    (mrbeastData.estSubCount - lastStats.mrbeast.subscribers) /
+    (timeTook / 1000);
   const lastHour = history[history.length - 1];
   const hourlyGains = mrbeastData.estSubCount - lastHour.subscribers;
-  const hourlyGainsComparedToLast = hourlyGains - lastStats.hourlyGains;
+  const hourlyGainsComparedToLast = hourlyGains - lastStats.mrbeast.hourlyGains;
+  const difference = tseriesData.estSubCount - mrbeastData.estSubCount;
   const firstDataToday = history.find(
     (d) =>
       d.date >=
@@ -215,8 +217,8 @@ export async function updateTask() {
       {
         name: "VS T-Series",
         value: trim(`
-          Subscribers: **${tseriesData.estSubCount.toLocaleString()}**
-          Difference: **${(mrbeastData.estSubCount - tseriesData.estSubCount).toLocaleString()}**
+          Subscribers: **${tseriesData.estSubCount.toLocaleString()}** (${gain(tseriesData.estSubCount - lastStats.tseries.subscribers)})
+          Difference: **${difference.toLocaleString()}** (${gain(difference - lastStats.difference)})
         `),
       },
       {
@@ -288,7 +290,10 @@ export async function updateTask() {
     history.slice(-12).map((d) => d.gained),
   );
 
-  updateStats(mrbeastData.estSubCount, hourlyGains);
+  updateStats({
+    mrbeastSubscribers: mrbeastData.estSubCount,
+    tseriesSubscribers: tseriesData.estSubCount,
+  });
   save();
 
   const formData = new FormData();
