@@ -22,6 +22,7 @@ interface WebhookData {
       icon_url?: string;
     };
     timestamp?: string;
+    color?: string;
   }[];
 }
 
@@ -49,6 +50,72 @@ const trim = (str: string) =>
     .split("\n")
     .map((str) => str.trim())
     .join("\n");
+
+interface Rate {
+  min?: number;
+  max?: number;
+  emoji?: string;
+  color: string;
+}
+
+const rates: Rate[] = [
+  {
+    max: 9999,
+    color: "#ffffff",
+  },
+  {
+    min: 9999,
+    max: 11999,
+    emoji: "🔥",
+    color: "#ffa500",
+  },
+  {
+    min: 11999,
+    max: 13999,
+    emoji: "<:GreenFire:1244348066325073980>",
+    color: "#00ff00",
+  },
+  {
+    min: 13999,
+    max: 15999,
+    emoji: "<:BlueFire:1244348062558584996>",
+    color: "#0000ff",
+  },
+  {
+    min: 15999,
+    max: 17999,
+    emoji: "<:PinkFire:1244350814617604177>",
+    color: "#ff00ff",
+  },
+  {
+    min: 17999,
+    max: 20999,
+    emoji: "<:PurpleFire:1244348073686335499>",
+    color: "#d000ff",
+  },
+  {
+    min: 20999,
+    emoji: "<:RedFire:1244421295408414750>",
+    color: "#ff0000",
+  },
+];
+
+function hexToDecimalColor(hexString: string) {
+  // Ensure the hex string starts with a hash (#) and remove it
+  if (hexString.startsWith("#")) {
+    hexString = hexString.slice(1);
+  }
+
+  // Validate the remaining string is a valid 6-digit hexadecimal
+  if (typeof hexString !== "string" || !/^[0-9a-fA-F]{6}$/.test(hexString)) {
+    throw new Error("Invalid hexadecimal color string");
+  }
+
+  // Convert the hexadecimal string to a decimal number
+  const decimalValue = parseInt(hexString, 16);
+
+  return decimalValue;
+}
 
 export async function updateTask() {
   const lastStats = getLastStats();
@@ -103,8 +170,12 @@ export async function updateTask() {
     gained: number;
   }[];
 
+  const rate = rates.find(
+    (r) => (r.min ?? 0) <= hourlyGains && (r.max ? r.max >= hourlyGains : true),
+  );
+
   const embedObject: Required<WebhookData>["embeds"][number] = {
-    title: `Current Subscribers: ${mrbeastData.estSubCount.toLocaleString()}`,
+    title: `${rate && rate.emoji ? `${rate.emoji} ` : ""}Current Subscribers: ${mrbeastData.estSubCount.toLocaleString()}`,
     description: trim(`
       Hourly Gains: **${gain(hourlyGains)}** (${gain(hourlyGainsComparedToLast)}) ${hourlyGainsComparedToLast > 0 ? "⏫" : hourlyGainsComparedToLast === 0 ? "" : "⏬"}
       Minutely Gains: **${gain(subRate * 60, 1)}**
@@ -156,6 +227,7 @@ export async function updateTask() {
       text: "Made by ToastedToast (@nottca) for MrBeast Statistics",
     },
     timestamp: currentDate.toISOString(),
+    color: hexToDecimalColor(rate?.color ?? "#ffffff"),
   };
 
   updateStats(mrbeastData.estSubCount, hourlyGains);
