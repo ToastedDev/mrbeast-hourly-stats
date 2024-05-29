@@ -2,7 +2,7 @@ import { CronJob } from "cron";
 import { updateTask } from "./update";
 
 const cron = new CronJob(
-  "*/5 * * * * *",
+  "0 */1 * * *",
   updateTask,
   null,
   true,
