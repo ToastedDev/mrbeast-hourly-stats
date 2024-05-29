@@ -1,3 +1,5 @@
+import { exists } from "node:fs/promises";
+
 async function main() {
   const csvFile = Bun.file("./MrBeast_Subscribers.csv");
   const csv = await csvFile.text();
@@ -59,6 +61,18 @@ async function main() {
       });
     }
   });
+
+  if (!(await exists("./db.json"))) {
+    return await Bun.write(
+      "./db.json",
+      JSON.stringify({
+        lastUpdate: hourlyData[hourlyData.length - 1].date,
+        subscribers: lastSubscribers,
+        hourlyGains: hourlySubscribersGained,
+        history: hourlyData,
+      }),
+    );
+  }
 
   const dbFile = Bun.file("./db.json");
   const db = await dbFile.json();
