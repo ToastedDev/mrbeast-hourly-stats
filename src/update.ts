@@ -131,7 +131,8 @@ export async function updateTask() {
   const timeTook = currentDate.getTime() - lastStats.update;
   const subRate =
     (mrbeastData.estSubCount - lastStats.subscribers) / (timeTook / 1000);
-  const hourlyGains = subRate * 1 * 60 * 60;
+  const lastHour = history[history.length - 1];
+  const hourlyGains = mrbeastData.estSubCount - lastHour.subscribers;
   const hourlyGainsComparedToLast = hourlyGains - lastStats.hourlyGains;
   const firstDataToday = history.find(
     (d) =>
