@@ -7,7 +7,7 @@ interface Database {
   history: {
     date: number;
     subscribers: number;
-    hourlyGains: number;
+    gained: number;
   }[];
 }
 
@@ -40,9 +40,10 @@ export function getLastStats() {
 
 export function updateStats(subscribers: number, hourlyGains: number) {
   db.lastUpdate = Date.now();
+  const gained = subscribers - db.subscribers;
   db.subscribers = subscribers;
   db.hourlyGains = hourlyGains;
-  db.history.push({ date: Date.now(), subscribers, hourlyGains });
+  db.history.push({ date: Date.now(), subscribers, gained });
 }
 
 export function getHistory() {
