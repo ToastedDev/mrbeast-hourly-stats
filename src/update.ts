@@ -90,6 +90,29 @@ export async function updateTask() {
     hourlyGains: 0,
   };
 
+  const dailyData = Object.values(
+    history.reduce((acc, data) => {
+      const date = new Date(data.date).toISOString().split("T")[0];
+
+      if (!acc[date]) {
+        acc[date] = {
+          date: new Date(data.date).getTime(),
+          subscribers: data.subscribers,
+          gained: 0,
+        };
+      }
+
+      acc[date].gained += data.gained;
+      acc[date].subscribers = data.subscribers; // Always update to the latest subscribers value
+
+      return acc;
+    }, {} as any),
+  ) as {
+    date: number;
+    subscribers: number;
+    gained: number;
+  }[];
+
   const embedObject: Required<WebhookData>["embeds"][number] = {
     title: `Current Subscribers: ${mrbeastData.estSubCount.toLocaleString()}`,
     description: trim(`
@@ -114,6 +137,16 @@ export async function updateTask() {
           .map(
             (d) =>
               `${convertDateToReadableWithTime(d.date)}: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`,
+          )
+          .join("\n"),
+      },
+      {
+        name: "Last 7 Days",
+        value: dailyData
+          .slice(0, 7)
+          .map(
+            (d) =>
+              `${convertDateToReadable(d.date)}: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`,
           )
           .join("\n"),
       },
