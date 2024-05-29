@@ -38,6 +38,10 @@ export function updateStats(subscribers: number, hourlyGains: number) {
   db.history.push({ date: Date.now(), subscribers, hourlyGains });
 }
 
+export function getHistory() {
+  return [...db.history];
+}
+
 export async function save() {
   await Bun.write("./db.json", JSON.stringify(db));
 }
