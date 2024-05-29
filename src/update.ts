@@ -227,7 +227,6 @@ export async function updateTask() {
     footer: {
       text: "Made by ToastedToast (@nottca) for MrBeast Statistics",
     },
-    timestamp: currentDate.toISOString(),
     color: hexToDecimalColor(rate?.color ?? "#ffffff"),
   };
 
@@ -240,6 +239,7 @@ export async function updateTask() {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
+      content: `# ${formatEasternTime(currentDate)} REPORT`,
       embeds: [embedObject],
     }),
   });
