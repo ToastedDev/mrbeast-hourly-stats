@@ -1,4 +1,19 @@
 import { getHistory, getLastStats, save, updateStats } from "./utils/db";
+import { Chart, registerables } from "chart.js";
+import { createCanvas, GlobalFonts } from "@napi-rs/canvas";
+import "chartjs-adapter-date-fns";
+import { graphConfiguration } from "./utils/graph";
+import { join } from "node:path";
+
+Chart.register(...registerables);
+GlobalFonts.registerFromPath(
+  join(process.cwd(), "fonts/Inter-Regular.ttf"),
+  "InterRegular",
+);
+GlobalFonts.registerFromPath(
+  join(process.cwd(), "fonts/Inter-Bold.ttf"),
+  "InterBold",
+);
 
 interface NiaData {
   estSubCount: number;
@@ -22,7 +37,6 @@ interface WebhookData {
       icon_url?: string;
     };
     timestamp?: string;
-    color?: string;
   }[];
 }
 
@@ -215,7 +229,7 @@ export async function updateTask() {
       {
         name: "Top 10 Highest Hourly Gains",
         value: history
-          .sort((a, b) => b.gained - a.gained)
+          .toSorted((a, b) => b.gained - a.gained)
           .slice(0, 10)
           .map(
             (d, index) =>
@@ -230,17 +244,93 @@ export async function updateTask() {
     color: hexToDecimalColor(rate?.color ?? "#ffffff"),
   };
 
+  const subscriberHistoryGraph = await createGraph(
+    "Subscriber history since release",
+    history.map(
+      (d) =>
+        new Date(
+          new Date(d.date).toLocaleString("en-US", {
+            timeZone: "America/New_York",
+          }),
+        ),
+    ),
+    history.map((d) => d.subscribers),
+  );
+  const hourlyGainsGraph = await createGraph(
+    "Hourly gains in the past 12 hours",
+    history.slice(-12).map(
+      (d) =>
+        new Date(
+          new Date(d.date).toLocaleString("en-US", {
+            timeZone: "America/New_York",
+          }),
+        ),
+    ),
+    history.slice(-12).map((d) => d.gained),
+  );
+
   updateStats(mrbeastData.estSubCount, hourlyGains);
   save();
 
-  await fetch(process.env.DISCORD_WEBHOOK_URL!, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
+  const formData = new FormData();
+  formData.append(
+    "payload_json",
+    JSON.stringify({
       content: `# ${formatEasternTime(currentDate)} REPORT`,
+      attachments: [
+        {
+          id: 0,
+          description: "Subscriber history since release",
+          filename: "subscriber_history.png",
+        },
+        {
+          id: 1,
+          description: "Hourly gains in the past 12 hours",
+          filename: "hourly_gains.png",
+        },
+      ],
       embeds: [embedObject],
     }),
+  );
+  formData.append(
+    "files[0]",
+    new Blob([subscriberHistoryGraph]),
+    "subscriber_history.png",
+  );
+  formData.append("files[1]", new Blob([hourlyGainsGraph]), "hourly_gains.png");
+
+  await fetch(process.env.DISCORD_WEBHOOK_URL!, {
+    method: "POST",
+    body: formData,
   });
+}
+
+function createGraph(
+  title: string,
+  dates: Date[],
+  subscriberHistory: number[],
+) {
+  const canvas = createCanvas(1200, 700);
+  const ctx = canvas.getContext("2d");
+
+  const chart = new Chart(
+    ctx as any,
+    graphConfiguration(title, {
+      labels: dates,
+      datasets: [
+        {
+          label: "",
+          data: subscriberHistory,
+          backgroundColor: "#2DD4FF",
+          borderColor: "#2DD4FF",
+          tension: 0.3,
+          pointRadius: 0,
+        },
+      ],
+    }),
+  );
+
+  chart.draw();
+
+  return canvas.encode("png");
 }
