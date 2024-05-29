@@ -240,10 +240,10 @@ export async function updateTask() {
           .join("\n"),
       },
       {
-        name: "Top 10 Highest Hourly Gains",
+        name: "Top 15 Highest Hourly Gains",
         value: history
           .toSorted((a, b) => b.gained - a.gained)
-          .slice(0, 10)
+          .slice(0, 15)
           .map(
             (d, index) =>
               `${index + 1}. ${formatEasternTime(new Date(d.date))}: **${gain(d.gained)}**`,
