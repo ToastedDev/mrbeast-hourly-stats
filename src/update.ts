@@ -163,7 +163,7 @@ export async function updateTask() {
   };
   const last12HoursRank =
     [
-      ...history.slice(-13),
+      ...history.slice(-11),
       {
         current: true,
         date: currentDate.getTime(),
