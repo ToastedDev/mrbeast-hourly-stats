@@ -113,7 +113,7 @@ export async function updateTask() {
           .slice(0, 12)
           .map(
             (d) =>
-              `${convertDateToReadableWithTime(d.date)}: ${d.subscribers} (${gain(d.gained)})`,
+              `${convertDateToReadableWithTime(d.date)}: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`,
           )
           .join("\n"),
       },
@@ -124,8 +124,16 @@ export async function updateTask() {
     timestamp: currentDate.toISOString(),
   };
 
-  console.log(embedObject);
-
   updateStats(mrbeastData.estSubCount, hourlyGains);
   save();
+
+  await fetch(process.env.DISCORD_WEBHOOK_URL!, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      embeds: [embedObject],
+    }),
+  });
 }
