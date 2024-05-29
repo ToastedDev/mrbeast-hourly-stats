@@ -161,6 +161,18 @@ export async function updateTask() {
     subscribers: 0,
     hourlyGains: 0,
   };
+  const last12HoursRank =
+    [
+      ...history.slice(-13),
+      {
+        current: true,
+        date: currentDate.getTime(),
+        subscribers: mrbeastData.estSubCount,
+        gained: hourlyGains,
+      },
+    ]
+      .sort((a, b) => b.gained - a.gained)
+      .findIndex((d) => (d as any).current) + 1;
 
   const dailyData = Object.values(
     history.reduce((acc, data) => {
@@ -192,6 +204,7 @@ export async function updateTask() {
   const embedObject: Required<WebhookData>["embeds"][number] = {
     title: `${rate && rate.emoji ? `${rate.emoji} ` : ""}Current Subscribers: ${mrbeastData.estSubCount.toLocaleString()}`,
     description: trim(`
+      Ranking vs Last 12 Hours: **${last12HoursRank}/12**
       Hourly Gains: **${gain(hourlyGains)}** (${gain(hourlyGainsComparedToLast)}) ${hourlyGainsComparedToLast > 0 ? "⏫" : hourlyGainsComparedToLast === 0 ? "" : "⏬"}
       Minutely Gains: **${gain(subRate * 60, 1)}**
       Secondly Gains: **${gain(subRate, 2)}**
