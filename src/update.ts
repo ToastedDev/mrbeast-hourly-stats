@@ -28,29 +28,19 @@ interface WebhookData {
 const gain = (gain: number, precision: number = 0) =>
   `${gain > 0 ? "+" : ""}${parseFloat(gain.toFixed(precision)).toLocaleString()}`;
 
-function convertDateToReadable(date: number) {
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-  const dateObj = new Date(date);
-  return `${months[dateObj.getMonth()]} ${dateObj.getDate()}`;
-}
+function formatEasternTime(date: Date, hasTime = true) {
+  const datePart = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "2-digit",
+    timeZone: "America/New_York",
+  }).format(date);
+  const timePart = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    hour12: true,
+    timeZone: "America/New_York",
+  }).format(date);
 
-function convertDateToReadableWithTime(date: number) {
-  const dateObj = new Date(date);
-  const hours = dateObj.getHours() % 12;
-  return `${convertDateToReadable(date)}, ${hours === 0 ? "12" : hours} ${dateObj.getHours() >= 12 ? "PM" : "AM"}`;
+  return `${datePart}${hasTime ? ` ${timePart} EST` : ""}`;
 }
 
 const trim = (str: string) =>
@@ -133,20 +123,20 @@ export async function updateTask() {
       {
         name: "Last 12 Hours",
         value: history
-          .slice(0, 12)
+          .slice(-12)
           .map(
             (d) =>
-              `${convertDateToReadableWithTime(d.date)}: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`,
+              `${formatEasternTime(new Date(d.date))}: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`,
           )
           .join("\n"),
       },
       {
         name: "Last 7 Days",
         value: dailyData
-          .slice(0, 7)
+          .slice(-7)
           .map(
             (d) =>
-              `${convertDateToReadable(d.date)}: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`,
+              `${formatEasternTime(new Date(d.date), false)}: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`,
           )
           .join("\n"),
       },
