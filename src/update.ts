@@ -218,8 +218,8 @@ export async function updateTask() {
           .sort((a, b) => b.gained - a.gained)
           .slice(0, 10)
           .map(
-            (d) =>
-              `${formatEasternTime(new Date(d.date))}: **${gain(d.gained)}**`,
+            (d, index) =>
+              `${index + 1}. ${formatEasternTime(new Date(d.date))}: **${gain(d.gained)}**`,
           )
           .join("\n"),
       },
