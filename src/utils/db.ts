@@ -84,7 +84,7 @@ export function updateStats(data: {
   db.tseriesData.subscribers = data.tseriesSubscribers;
 
   const difference = data.tseriesSubscribers - data.mrbeastSubscribers;
-  db.differenceData.hourlyGains = db.differenceData.difference - difference;
+  db.differenceData.hourlyGains = difference - db.differenceData.difference;
   db.differenceData.difference = difference;
 
   db.history.push({
