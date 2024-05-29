@@ -239,7 +239,7 @@ export async function updateTask() {
       },
     ],
     footer: {
-      text: "Made by ToastedToast (@nottca) for MrBeast Statistics. Credits to Marcus for the idea.",
+      text: "Made by ToastedToast (@nottca) for MrBeast Statistics",
     },
     color: hexToDecimalColor(rate?.color ?? "#ffffff"),
   };
