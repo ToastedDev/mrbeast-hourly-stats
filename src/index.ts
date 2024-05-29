@@ -1,3 +1,11 @@
-import { getLastStats } from "./utils/db";
+import { CronJob } from "cron";
+import { updateTask } from "./update";
 
-console.log(getLastStats());
+const cron = new CronJob(
+  "*/5 * * * * *",
+  updateTask,
+  null,
+  true,
+  "Africa/Abidjan",
+);
+cron.start();

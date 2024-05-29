@@ -1,6 +1,7 @@
-import { exists, readFile } from "node:fs/promises";
+import { exists } from "node:fs/promises";
 
 interface Database {
+  lastUpdate: number;
   subscribers: number;
   hourlyGains: number;
   history: {
@@ -15,6 +16,7 @@ async function initDatabase() {
     await Bun.write(
       "./db.json",
       JSON.stringify({
+        lastUpdate: 0,
         subscribers: 0,
         hourlyGains: 0,
         history: [],
@@ -29,10 +31,15 @@ const dbFile = Bun.file("./db.json");
 const db: Database = await dbFile.json();
 
 export function getLastStats() {
-  return { subscribers: db.subscribers, hourlyGains: db.hourlyGains };
+  return {
+    update: db.lastUpdate,
+    subscribers: db.subscribers,
+    hourlyGains: db.hourlyGains,
+  };
 }
 
 export function updateStats(subscribers: number, hourlyGains: number) {
+  db.lastUpdate = Date.now();
   db.subscribers = subscribers;
   db.hourlyGains = hourlyGains;
   db.history.push({ date: Date.now(), subscribers, hourlyGains });
