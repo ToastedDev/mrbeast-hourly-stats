@@ -43,7 +43,7 @@ interface WebhookData {
 const gain = (gain: number, precision: number = 0) =>
   `${gain > 0 ? "+" : ""}${parseFloat(gain.toFixed(precision)).toLocaleString()}`;
 
-function formatEasternTime(date: Date, hasTime = true) {
+function formatEasternTime(date: Date, hasTime = true, timeSeparator = " ") {
   const datePart = new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "2-digit",
@@ -55,7 +55,7 @@ function formatEasternTime(date: Date, hasTime = true) {
     timeZone: "America/New_York",
   }).format(date);
 
-  return `${datePart}${hasTime ? ` ${timePart} EST` : ""}`;
+  return `${datePart}${hasTime ? `${timeSeparator}${timePart} EST` : ""}`;
 }
 
 const trim = (str: string) =>
@@ -163,6 +163,7 @@ export async function updateTask() {
     subscribers: 0,
     hourlyGains: 0,
   };
+  const firstCountInLast24Hours = history.slice(-24)[0];
   const last12HoursRank =
     [
       ...history.slice(-11),
@@ -211,6 +212,7 @@ export async function updateTask() {
       Minutely Gains: **${gain(subRate * 60, 1)}**
       Secondly Gains: **${gain(subRate, 2)}**
       Subscribers Gained Today: **${gain(mrbeastData.estSubCount - firstDataToday.subscribers)}**
+      Subscribers Gained in Last 24 Hours: **${gain(mrbeastData.estSubCount - firstCountInLast24Hours.subscribers)}**
       Subscribers Gained Since Release: **${gain(mrbeastData.estSubCount - firstData.subscribers)}**
     `),
     fields: [
@@ -300,7 +302,7 @@ export async function updateTask() {
   formData.append(
     "payload_json",
     JSON.stringify({
-      content: `# ${formatEasternTime(currentDate)} REPORT`,
+      content: `# ${formatEasternTime(currentDate, true, ", ")} REPORT`,
       attachments: [
         {
           id: 0,
