@@ -237,20 +237,26 @@ export async function updateTask() {
         name: "Last 12 Hours",
         value: history
           .slice(-12)
-          .map(
-            (d) =>
-              `${formatEasternTime(new Date(d.date))}: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`,
-          )
+          .map((d) => {
+            const date = getDateInEasternTime(new Date(d.date));
+            const isCurrentHour =
+              date.toISOString().split("T")[0] ===
+              currentDateAsEastern.toISOString().split("T")[0];
+            return `${isCurrentHour ? "**" : ""}${formatEasternTime(new Date(d.date))}${isCurrentHour ? "**" : ""}: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`;
+          })
           .join("\n"),
       },
       {
         name: "Last 7 Days",
         value: dailyData
           .slice(-7)
-          .map(
-            (d) =>
-              `${formatEasternTime(new Date(d.date), false)}: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`,
-          )
+          .map((d) => {
+            const date = getDateInEasternTime(new Date(d.date));
+            const isCurrentDate =
+              date.toISOString().split("T")[0] ===
+              currentDateAsEastern.toISOString().split("T")[0];
+            return `${isCurrentDate ? "**" : ""}${formatEasternTime(new Date(d.date), false)}${isCurrentDate ? "**" : ""}: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`;
+          })
           .join("\n"),
       },
       {
@@ -258,10 +264,13 @@ export async function updateTask() {
         value: history
           .toSorted((a, b) => b.gained - a.gained)
           .slice(0, 15)
-          .map(
-            (d, index) =>
-              `${index + 1}. ${formatEasternTime(new Date(d.date))}: **${gain(d.gained)}**`,
-          )
+          .map((d, index) => {
+            const date = getDateInEasternTime(new Date(d.date));
+            const isCurrentHour =
+              date.toISOString().split("T")[0] ===
+              currentDateAsEastern.toISOString().split("T")[0];
+            return `${index + 1}. ${isCurrentHour ? "**" : ""}${formatEasternTime(new Date(d.date))}${isCurrentHour ? "**" : ""}: **${gain(d.gained)}**`;
+          })
           .join("\n"),
       },
     ],
