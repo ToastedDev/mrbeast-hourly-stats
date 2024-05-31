@@ -279,7 +279,8 @@ export async function updateTask() {
             const date = getDateInEasternTime(new Date(d.date));
             const isCurrentHour =
               date.toISOString().split("T")[0] ===
-              currentDateAsEastern.toISOString().split("T")[0];
+              currentDateAsEastern.toISOString().split("T")[0] &&
+              date.getHours() === currentDateAsEastern.getHours();
             return `${isCurrentHour ? "**" : ""}${formatEasternTime(new Date(d.date))}${isCurrentHour ? "**" : ""}: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`;
           })
           .join("\n"),
@@ -306,7 +307,8 @@ export async function updateTask() {
             const date = getDateInEasternTime(new Date(d.date));
             const isCurrentHour =
               date.toISOString().split("T")[0] ===
-              currentDateAsEastern.toISOString().split("T")[0];
+              currentDateAsEastern.toISOString().split("T")[0] &&
+              date.getHours() === currentDateAsEastern.getHours();
             return `${index + 1}. ${isCurrentHour ? "**" : ""}${formatEasternTime(new Date(d.date))}${isCurrentHour ? "**" : ""}: **${gain(d.gained)}**`;
           })
           .join("\n"),
