@@ -169,7 +169,7 @@ export async function updateTask() {
   const mrbeastDaily = subRate * 24 * 60 * 60;
   const tseriesDaily = tseriesSubRate * 24 * 60 * 60;
   const dailyDifference = mrbeastDaily - tseriesDaily;
-  const daysToOvertake = difference - Math.abs(dailyDifference);
+  const daysToOvertake = difference / Math.abs(dailyDifference);
   const overtakingDate = new Date(
     currentDate.getTime() + daysToOvertake * 24 * 60 * 60 * 1000,
   );
