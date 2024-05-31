@@ -35,6 +35,9 @@ export const graphConfiguration = (
       },
       legend: {
         display: false,
+        labels: {
+          usePointStyle: true,
+        },
       },
       subtitle: {
         display: true,
