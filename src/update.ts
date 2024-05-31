@@ -139,6 +139,35 @@ function hexToDecimalColor(hexString: string) {
   return decimalValue;
 }
 
+function getPassTime(data: {
+  mrbeastData: {
+    lastUpdate: number;
+    subscribers: number;
+  };
+  tseriesSubscribers: number;
+  difference: number;
+  history: {
+    gained: number;
+  }[];
+}) {
+  const mrbeastSubscribers = data.mrbeastData.subscribers;
+  const tseriesSubscribers = data.tseriesSubscribers;
+  const difference = data.difference;
+  const lastUpdate = data.mrbeastData.lastUpdate;
+  const dailyGainRate = data.history[0].gained;
+
+  // Calculating the days required to close the gap
+  const daysToSurpass = difference / dailyGainRate;
+
+  // Calculating the timestamp when MrBeast will surpass T-Series
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const surpassDateTimestamp = lastUpdate + daysToSurpass * msPerDay;
+
+  // Converting the timestamp to a date object
+  const surpassDate = new Date(surpassDateTimestamp);
+  return formatEasternTime(surpassDate);
+}
+
 export async function updateTask() {
   const lastStats = getLastStats();
   const history = getHistory();
@@ -231,6 +260,15 @@ export async function updateTask() {
         value: trim(`
           Subscribers: **${tseriesData.estSubCount.toLocaleString()}** (${gain(tseriesData.estSubCount - lastStats.tseriesSubscribers)})
           Difference: **${difference.toLocaleString()}** (${gain(difference - lastStats.difference)})
+          Estimated Passing Time: **${getPassTime({
+          mrbeastData: {
+            lastUpdate: lastStats.mrbeast.update,
+            subscribers: mrbeastData.estSubCount,
+          },
+          tseriesSubscribers: tseriesData.estSubCount,
+          difference: difference,
+          history: history,
+        })}**
         `),
       },
       {
