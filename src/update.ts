@@ -4,6 +4,7 @@ import { createCanvas, GlobalFonts } from "@napi-rs/canvas";
 import "chartjs-adapter-date-fns";
 import { graphConfiguration } from "./utils/graph";
 import { join } from "node:path";
+import { getDefaultCompilerOptions } from "typescript";
 
 Chart.register(...registerables);
 GlobalFonts.registerFromPath(
@@ -200,13 +201,11 @@ export async function updateTask() {
   const dailyData = (
     Object.values(
       history.reduce((acc, data) => {
-        const date = getDateInEasternTime(new Date(data.date))
-          .toISOString()
-          .split("T")[0];
+        const date = formatEasternTime(new Date(data.date), false);
 
         if (!acc[date]) {
           acc[date] = {
-            date: new Date(data.date).getTime(),
+            date: getDateInEasternTime(new Date(data.date)).getTime(),
             subscribers: data.subscribers,
           };
         }
