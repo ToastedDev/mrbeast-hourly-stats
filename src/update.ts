@@ -271,11 +271,13 @@ export async function updateTask() {
         value: dailyData
           .slice(-7)
           .map((d) => {
+            const dt = new Date(d.date);
+            dt.setDate(dt.getDate() + 1);
             const date = getDateInEasternTime(new Date(d.date));
             const isCurrentDate =
               date.toISOString().split("T")[0] ===
               currentDateAsEastern.toISOString().split("T")[0];
-            return `${isCurrentDate ? "**" : ""}${formatEasternTime(new Date(d.date), false)}${isCurrentDate ? "**" : ""}: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`;
+            return `${isCurrentDate ? "**" : ""}${formatEasternTime(dt, false)}${isCurrentDate ? "**" : ""}: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`;
           })
           .join("\n"),
       },
