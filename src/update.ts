@@ -43,7 +43,12 @@ interface WebhookData {
 const gain = (gain: number, precision: number = 0) =>
   `${gain > 0 ? "+" : ""}${parseFloat(gain.toFixed(precision)).toLocaleString()}`;
 
-function formatEasternTime(date: Date, hasTime = true, timeSeparator = " ", fullTime = false) {
+function formatEasternTime(
+  date: Date,
+  hasTime = true,
+  timeSeparator = " ",
+  fullTime = false,
+) {
   const datePart = new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "2-digit",
@@ -141,35 +146,6 @@ function hexToDecimalColor(hexString: string) {
   return decimalValue;
 }
 
-function getPassTime(data: {
-  mrbeastData: {
-    lastUpdate: number;
-    subscribers: number;
-  };
-  tseriesSubscribers: number;
-  difference: number;
-  history: {
-    gained: number;
-  }[];
-}) {
-  const mrbeastSubscribers = data.mrbeastData.subscribers;
-  const tseriesSubscribers = data.tseriesSubscribers;
-  const difference = data.difference;
-  const lastUpdate = data.mrbeastData.lastUpdate;
-  const dailyGainRate = data.history[0].gained;
-
-  // Calculating the days required to close the gap
-  const daysToSurpass = difference / dailyGainRate;
-
-  // Calculating the timestamp when MrBeast will surpass T-Series
-  const msPerDay = 24 * 60 * 60 * 1000;
-  const surpassDateTimestamp = lastUpdate + daysToSurpass * msPerDay;
-
-  // Converting the timestamp to a date object
-  const surpassDate = new Date(surpassDateTimestamp);
-  return formatEasternTime(surpassDate, true, " ", true);
-}
-
 export async function updateTask() {
   const lastStats = getLastStats();
   const history = getHistory();
@@ -186,10 +162,21 @@ export async function updateTask() {
   const subRate =
     (mrbeastData.estSubCount - lastStats.mrbeast.subscribers) /
     (timeTook / 1000);
+  const tseriesSubRate =
+    (tseriesData.estSubCount - lastStats.tseriesSubscribers) /
+    (timeTook / 1000);
+  const difference = tseriesData.estSubCount - mrbeastData.estSubCount;
+  const mrbeastDaily = subRate * 24 * 60 * 60;
+  const tseriesDaily = tseriesSubRate * 24 * 60 * 60;
+  const dailyDifference = mrbeastDaily - tseriesDaily;
+  const daysToOvertake = difference - Math.abs(dailyDifference);
+  const overtakingDate = new Date(
+    currentDate.getTime() + daysToOvertake * 24 * 60 * 60 * 1000,
+  );
+
   const lastHour = history[history.length - 1];
   const hourlyGains = mrbeastData.estSubCount - lastHour.subscribers;
   const hourlyGainsComparedToLast = hourlyGains - lastHour.gained;
-  const difference = tseriesData.estSubCount - mrbeastData.estSubCount;
   const firstCountInLast24Hours = history.slice(-24)[0];
   const last12HoursRank =
     [
@@ -262,15 +249,7 @@ export async function updateTask() {
         value: trim(`
           Subscribers: **${tseriesData.estSubCount.toLocaleString()}** (${gain(tseriesData.estSubCount - lastStats.tseriesSubscribers)})
           Difference: **${difference.toLocaleString()}** (${gain(difference - lastStats.difference)})
-          Estimated Passing Time: **${getPassTime({
-            mrbeastData: {
-              lastUpdate: lastStats.mrbeast.update,
-              subscribers: mrbeastData.estSubCount,
-            },
-            tseriesSubscribers: tseriesData.estSubCount,
-            difference: difference,
-            history: history,
-          })}**
+          Estimated Passing Time: **${formatEasternTime(overtakingDate, true, " ", true)}**
         `),
       },
       {
@@ -281,7 +260,7 @@ export async function updateTask() {
             const date = getDateInEasternTime(new Date(d.date));
             const isCurrentHour =
               date.toISOString().split("T")[0] ===
-              currentDateAsEastern.toISOString().split("T")[0] &&
+                currentDateAsEastern.toISOString().split("T")[0] &&
               date.getHours() === currentDateAsEastern.getHours();
             return `${isCurrentHour ? "**" : ""}${formatEasternTime(new Date(d.date))}${isCurrentHour ? "**" : ""}: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`;
           })
@@ -309,7 +288,7 @@ export async function updateTask() {
             const date = getDateInEasternTime(new Date(d.date));
             const isCurrentHour =
               date.toISOString().split("T")[0] ===
-              currentDateAsEastern.toISOString().split("T")[0] &&
+                currentDateAsEastern.toISOString().split("T")[0] &&
               date.getHours() === currentDateAsEastern.getHours();
             return `${index + 1}. ${isCurrentHour ? "**" : ""}${formatEasternTime(new Date(d.date))}${isCurrentHour ? "**" : ""}: **${gain(d.gained)}**`;
           })
