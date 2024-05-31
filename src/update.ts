@@ -43,14 +43,16 @@ interface WebhookData {
 const gain = (gain: number, precision: number = 0) =>
   `${gain > 0 ? "+" : ""}${parseFloat(gain.toFixed(precision)).toLocaleString()}`;
 
-function formatEasternTime(date: Date, hasTime = true, timeSeparator = " ") {
+function formatEasternTime(date: Date, hasTime = true, timeSeparator = " ", fullTime = false) {
   const datePart = new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "2-digit",
     timeZone: "America/New_York",
   }).format(date);
   const timePart = new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
+    hour: fullTime ? "2-digit" : "numeric",
+    minute: fullTime ? "2-digit" : undefined,
+    second: fullTime ? "2-digit" : undefined,
     hour12: true,
     timeZone: "America/New_York",
   }).format(date);
@@ -165,7 +167,7 @@ function getPassTime(data: {
 
   // Converting the timestamp to a date object
   const surpassDate = new Date(surpassDateTimestamp);
-  return formatEasternTime(surpassDate);
+  return formatEasternTime(surpassDate, true, " ", true);
 }
 
 export async function updateTask() {
@@ -261,14 +263,14 @@ export async function updateTask() {
           Subscribers: **${tseriesData.estSubCount.toLocaleString()}** (${gain(tseriesData.estSubCount - lastStats.tseriesSubscribers)})
           Difference: **${difference.toLocaleString()}** (${gain(difference - lastStats.difference)})
           Estimated Passing Time: **${getPassTime({
-          mrbeastData: {
-            lastUpdate: lastStats.mrbeast.update,
-            subscribers: mrbeastData.estSubCount,
-          },
-          tseriesSubscribers: tseriesData.estSubCount,
-          difference: difference,
-          history: history,
-        })}**
+            mrbeastData: {
+              lastUpdate: lastStats.mrbeast.update,
+              subscribers: mrbeastData.estSubCount,
+            },
+            tseriesSubscribers: tseriesData.estSubCount,
+            difference: difference,
+            history: history,
+          })}**
         `),
       },
       {
