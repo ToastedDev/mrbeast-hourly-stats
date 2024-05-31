@@ -58,6 +58,14 @@ function formatEasternTime(date: Date, hasTime = true, timeSeparator = " ") {
   return `${datePart}${hasTime ? `${timeSeparator}${timePart} EST` : ""}`;
 }
 
+function getDateInEasternTime(date: Date) {
+  return new Date(
+    date.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+    }),
+  );
+}
+
 const trim = (str: string) =>
   str
     .trim()
@@ -136,6 +144,7 @@ export async function updateTask() {
   const history = getHistory();
   const firstData = history[0];
   const currentDate = new Date();
+  const currentDateAsEastern = getDateInEasternTime(currentDate);
 
   const res = await fetch(
     "https://nia-statistics.com/api/get?platform=youtube&type=channel&id=UCX6OQ3DkcsbYNE6H8uQQuVA,UCq-Fj5jknLsUf-MWSy4_brA",
@@ -150,19 +159,6 @@ export async function updateTask() {
   const hourlyGains = mrbeastData.estSubCount - lastHour.subscribers;
   const hourlyGainsComparedToLast = hourlyGains - lastHour.gained;
   const difference = tseriesData.estSubCount - mrbeastData.estSubCount;
-  const firstDataToday = history.find(
-    (d) =>
-      d.date >=
-      new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        currentDate.getDate(),
-      ).getTime(),
-  ) ?? {
-    date: 0,
-    subscribers: 0,
-    hourlyGains: 0,
-  };
   const firstCountInLast24Hours = history.slice(-24)[0];
   const last12HoursRank =
     [
@@ -177,28 +173,42 @@ export async function updateTask() {
       .sort((a, b) => b.gained - a.gained)
       .findIndex((d) => (d as any).current) + 1;
 
-  const dailyData = Object.values(
-    history.reduce((acc, data) => {
-      const date = new Date(data.date).toISOString().split("T")[0];
+  history.push({
+    date: new Date().getTime(),
+    subscribers: mrbeastData.estSubCount,
+    gained: hourlyGains,
+  });
 
-      if (!acc[date]) {
-        acc[date] = {
-          date: new Date(data.date).getTime(),
-          subscribers: data.subscribers,
-          gained: 0,
-        };
-      }
+  const dailyData = (
+    Object.values(
+      history.reduce((acc, data) => {
+        const date = getDateInEasternTime(new Date(data.date))
+          .toISOString()
+          .split("T")[0];
 
-      acc[date].gained += data.gained;
-      acc[date].subscribers = data.subscribers; // Always update to the latest subscribers value
+        if (!acc[date]) {
+          acc[date] = {
+            date: new Date(data.date).getTime(),
+            subscribers: data.subscribers,
+          };
+        }
 
-      return acc;
-    }, {} as any),
-  ) as {
-    date: number;
-    subscribers: number;
-    gained: number;
-  }[];
+        acc[date].subscribers = data.subscribers; // Always update to the latest subscribers value
+
+        return acc;
+      }, {} as any),
+    ) as {
+      date: number;
+      subscribers: number;
+    }[]
+  ).map((d, index, arr) => {
+    const last = arr[index - 1];
+    return {
+      ...d,
+      gained: d.subscribers - (last ? last.subscribers : 0),
+    };
+  });
+  const gainedToday = dailyData[dailyData.length - 1].gained;
 
   const rate = rates.find(
     (r) => (r.min ?? 0) <= hourlyGains && (r.max ? r.max >= hourlyGains : true),
@@ -211,7 +221,7 @@ export async function updateTask() {
       Hourly Gains: **${gain(hourlyGains)}** (${gain(hourlyGainsComparedToLast)}) ${hourlyGainsComparedToLast > 0 ? "⏫" : hourlyGainsComparedToLast === 0 ? "" : "⏬"}
       Minutely Gains: **${gain(subRate * 60, 1)}**
       Secondly Gains: **${gain(subRate, 2)}**
-      Subscribers Gained Today: **${gain(mrbeastData.estSubCount - firstDataToday.subscribers)}**
+      Subscribers Gained Today: **${gain(gainedToday)}**
       Subscribers Gained in Last 24 Hours: **${gain(mrbeastData.estSubCount - firstCountInLast24Hours.subscribers)}**
       Subscribers Gained Since Release: **${gain(mrbeastData.estSubCount - firstData.subscribers)}**
     `),
@@ -261,34 +271,16 @@ export async function updateTask() {
     color: hexToDecimalColor(rate?.color ?? "#ffffff"),
   };
 
-  history.push({
-    date: new Date().getTime(),
-    subscribers: mrbeastData.estSubCount,
-    gained: hourlyGains,
-  });
-
   const subscriberHistoryGraph = await createGraph(
     "Subscriber history since release",
-    history.map(
-      (d) =>
-        new Date(
-          new Date(d.date).toLocaleString("en-US", {
-            timeZone: "America/New_York",
-          }),
-        ),
-    ),
+    history.map((d) => getDateInEasternTime(new Date(d.date))),
     history.map((d) => d.subscribers),
   );
   const hourlyGainsGraph = await createGraph(
     "Hourly gains in the past 12 hours",
-    history.slice(-12).map(
-      (d) =>
-        new Date(
-          new Date(d.date).toLocaleString("en-US", {
-            timeZone: "America/New_York",
-          }),
-        ),
-    ),
+    history
+      .slice(-12)
+      .map((d) => new Date(getDateInEasternTime(new Date(d.date)))),
     history.slice(-12).map((d) => d.gained),
   );
 
