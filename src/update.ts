@@ -125,9 +125,15 @@ const rates: Rate[] = [
   },
   {
     min: 20000,
+    max: 49999,
     emoji: "<:RedFire:1244421295408414750>",
     color: "#ff0000",
   },
+  {
+    min: 50000,
+    emoji: "<:VoidFire:1246404685531709450>",
+    color: "#1f074d"
+  }
 ];
 
 function hexToDecimalColor(hexString: string) {
