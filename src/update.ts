@@ -160,10 +160,15 @@ export async function updateTask() {
   const currentDate = new Date();
   const currentDateAsEastern = getDateInEasternTime(currentDate);
 
-  const res = await fetch(
-    "https://nia-statistics.com/api/get?platform=youtube&type=channel&id=UCX6OQ3DkcsbYNE6H8uQQuVA,UCq-Fj5jknLsUf-MWSy4_brA",
-  );
-  const [mrbeastData, tseriesData] = (await res.json()) as [NiaData, NiaData];
+  const res = await Promise.all([
+await fetch(
+    "https://axern.space/api/get?platform=youtube&type=channel&id=UCX6OQ3DkcsbYNE6H8uQQuVA",
+  ),
+await fetch(
+    "https://axern.space/api/get?platform=youtube&type=channel&id=UCq-Fj5jknLsUf-MWSy4_brA",
+  )
+  ])
+  const [mrbeastData, tseriesData] = (await Promise.all(res.map((res) => res.json()))) as [NiaData, NiaData];
 
   const timeTook = currentDate.getTime() - lastStats.mrbeast.update;
   const subRate =
