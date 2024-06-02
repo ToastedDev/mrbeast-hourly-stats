@@ -132,8 +132,8 @@ const rates: Rate[] = [
   {
     min: 50000,
     emoji: "<:VoidFire:1246404685531709450>",
-    color: "#1f074d"
-  }
+    color: "#1f074d",
+  },
 ];
 
 function hexToDecimalColor(hexString: string) {
@@ -161,14 +161,16 @@ export async function updateTask() {
   const currentDateAsEastern = getDateInEasternTime(currentDate);
 
   const res = await Promise.all([
-await fetch(
-    "https://axern.space/api/get?platform=youtube&type=channel&id=UCX6OQ3DkcsbYNE6H8uQQuVA",
-  ),
-await fetch(
-    "https://axern.space/api/get?platform=youtube&type=channel&id=UCq-Fj5jknLsUf-MWSy4_brA",
-  )
-  ])
-  const [mrbeastData, tseriesData] = (await Promise.all(res.map((res) => res.json()))) as [NiaData, NiaData];
+    await fetch(
+      "https://axern.space/api/get?platform=youtube&type=channel&id=UCX6OQ3DkcsbYNE6H8uQQuVA",
+    ),
+    await fetch(
+      "https://axern.space/api/get?platform=youtube&type=channel&id=UCq-Fj5jknLsUf-MWSy4_brA",
+    ),
+  ]);
+  const [mrbeastData, tseriesData] = (await Promise.all(
+    res.map((res) => res.json()),
+  )) as [NiaData, NiaData];
 
   const timeTook = currentDate.getTime() - lastStats.mrbeast.update;
   const subRate =
