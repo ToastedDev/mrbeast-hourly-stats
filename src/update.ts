@@ -182,17 +182,7 @@ export async function updateTask() {
   const subRate =
     (mrbeastData.estSubCount - lastStats.mrbeast.subscribers) /
     (timeTook / 1000);
-  const tseriesSubRate =
-    (tseriesData.estSubCount - lastStats.tseriesSubscribers) /
-    (timeTook / 1000);
-  const difference = tseriesData.estSubCount - mrbeastData.estSubCount;
-  const mrbeastDaily = subRate * 24 * 60 * 60;
-  const tseriesDaily = tseriesSubRate * 24 * 60 * 60;
-  const dailyDifference = mrbeastDaily - tseriesDaily;
-  const daysToOvertake = difference / Math.abs(dailyDifference);
-  const overtakingDate = new Date(
-    currentDate.getTime() + daysToOvertake * 24 * 60 * 60 * 1000,
-  );
+    const mrbeastDaily = subRate * 24 * 60 * 60;
 
   const lastHour = history[history.length - 1];
   const hourlyGains = mrbeastData.estSubCount - lastHour.subscribers;
@@ -262,14 +252,6 @@ export async function updateTask() {
       Subscribers Gained Since Release: **${gain(mrbeastData.estSubCount - firstData.subscribers)}**
     `),
     fields: [
-      {
-        name: "VS T-Series",
-        value: trim(`
-          Subscribers: **${tseriesData.estSubCount.toLocaleString()}** (${gain(tseriesData.estSubCount - lastStats.tseriesSubscribers)})
-          Difference: **${difference.toLocaleString()}** (${gain(difference - lastStats.difference)})
-          Estimated Passing Time: **${formatEasternTime(overtakingDate, true, " ", true)}**
-        `),
-      },
       {
         name: "Last 12 Hours",
         value: history
