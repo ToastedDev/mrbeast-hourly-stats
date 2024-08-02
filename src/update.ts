@@ -17,7 +17,8 @@ GlobalFonts.registerFromPath(
 );
 
 interface NiaData {
-  estSubCount: number;
+  mrbeast: number;
+  time: number;
 }
 
 interface WebhookData {
@@ -143,17 +144,14 @@ const rates: Rate[] = [
 ];
 
 function hexToDecimalColor(hexString: string) {
-  // Ensure the hex string starts with a hash (#) and remove it
   if (hexString.startsWith("#")) {
     hexString = hexString.slice(1);
   }
 
-  // Validate the remaining string is a valid 6-digit hexadecimal
   if (typeof hexString !== "string" || !/^[0-9a-fA-F]{6}$/.test(hexString)) {
     throw new Error("Invalid hexadecimal color string");
   }
 
-  // Convert the hexadecimal string to a decimal number
   const decimalValue = parseInt(hexString, 16);
 
   return decimalValue;
@@ -166,26 +164,34 @@ export async function updateTask() {
   const currentDate = new Date();
   const currentDateAsEastern = getDateInEasternTime(currentDate);
 
-  const res = await Promise.all([
-    await fetch(
-      "https://axern.space/api/get?platform=youtube&type=channel&id=UCX6OQ3DkcsbYNE6H8uQQuVA",
-    ),
-    await fetch(
-      "https://axern.space/api/get?platform=youtube&type=channel&id=UCq-Fj5jknLsUf-MWSy4_brA",
-    ),
-  ]);
-  const [mrbeastData, tseriesData] = (await Promise.all(
-    res.map((res) => res.json()),
-  )) as [NiaData, NiaData];
+  let response, niaData;
+  try {
+    response = await fetch("https://raw.nia-statistics.com/totalcounts");
+    niaData = (await response.json()).data as NiaData;
+  } catch (error) {
+    console.error("Fetch error from primary URL:", error);
+
+    try {
+      response = await fetch("https://nia-statistics.com/api/get?platform=youtube&type=channel&id=UCX6OQ3DkcsbYNE6H8uQQuVA");
+      const fallbackData = await response.json();
+      niaData = {
+        mrbeast: fallbackData.estSubCount,
+        time: Date.now()
+      };
+    } catch (fallbackError) {
+      console.error("Fetch error from fallback URL:", fallbackError);
+      return;
+    }
+  }
 
   const timeTook = currentDate.getTime() - lastStats.mrbeast.update;
   const subRate =
-    (mrbeastData.estSubCount - lastStats.mrbeast.subscribers) /
+    (niaData.mrbeast - lastStats.mrbeast.subscribers) /
     (timeTook / 1000);
-    const mrbeastDaily = subRate * 24 * 60 * 60;
+  const mrbeastDaily = subRate * 24 * 60 * 60;
 
   const lastHour = history[history.length - 1];
-  const hourlyGains = mrbeastData.estSubCount - lastHour.subscribers;
+  const hourlyGains = niaData.mrbeast - lastHour.subscribers;
   const hourlyGainsComparedToLast = hourlyGains - lastHour.gained;
   const firstCountInLast24Hours = history.slice(-24)[0];
   const last12HoursRank =
@@ -194,7 +200,7 @@ export async function updateTask() {
       {
         current: true,
         date: currentDate.getTime(),
-        subscribers: mrbeastData.estSubCount,
+        subscribers: niaData.mrbeast,
         gained: hourlyGains,
       },
     ]
@@ -203,7 +209,7 @@ export async function updateTask() {
 
   history.push({
     date: new Date().getTime(),
-    subscribers: mrbeastData.estSubCount,
+    subscribers: niaData.mrbeast,
     gained: hourlyGains,
   });
 
@@ -219,7 +225,7 @@ export async function updateTask() {
           };
         }
 
-        acc[date].subscribers = data.subscribers; // Always update to the latest subscribers value
+        acc[date].subscribers = data.subscribers; 
 
         return acc;
       }, {} as any),
@@ -241,15 +247,15 @@ export async function updateTask() {
   );
 
   const embedObject: Required<WebhookData>["embeds"][number] = {
-    title: `${rate && rate.emoji ? `${rate.emoji} ` : ""}Current Subscribers: ${mrbeastData.estSubCount.toLocaleString()}`,
+    title: `${rate && rate.emoji ? `${rate.emoji} ` : ""}Current Subscribers: ${niaData.mrbeast.toLocaleString()}`,
     description: trim(`
       Ranking vs Last 12 Hours: **${last12HoursRank}/12**
       Hourly Gains: **${gain(hourlyGains)}** (${gain(hourlyGainsComparedToLast)}) ${hourlyGainsComparedToLast > 0 ? "⏫" : hourlyGainsComparedToLast === 0 ? "" : "⏬"}
       Minutely Gains: **${gain(subRate * 60, 1)}**
       Secondly Gains: **${gain(subRate, 2)}**
       Subscribers Gained Today: **${gain(gainedToday)}**
-      Subscribers Gained in Last 24 Hours: **${gain(mrbeastData.estSubCount - firstCountInLast24Hours.subscribers)}**
-      Subscribers Gained Since Release: **${gain(mrbeastData.estSubCount - firstData.subscribers)}**
+      Subscribers Gained in Last 24 Hours: **${gain(niaData.mrbeast - firstCountInLast24Hours.subscribers)}**
+      Subscribers Gained Since Release: **${gain(niaData.mrbeast - firstData.subscribers)}**
     `),
     fields: [
       {
@@ -298,7 +304,7 @@ export async function updateTask() {
       },
     ],
     footer: {
-      text: "Made by ToastedToast (@nottca) for MrBeast Statistics",
+      text: "Made by ToastedToast (@nottca) for discord.gg/mrbeaststats",
     },
     color: hexToDecimalColor(rate?.color ?? "#ffffff"),
   };
@@ -317,8 +323,7 @@ export async function updateTask() {
   );
 
   updateStats({
-    mrbeastSubscribers: mrbeastData.estSubCount,
-    tseriesSubscribers: tseriesData.estSubCount,
+    mrbeastSubscribers: niaData.mrbeast,
   });
   save();
 

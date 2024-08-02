@@ -5,8 +5,6 @@ interface Database {
     lastUpdate: number;
     subscribers: number;
   };
-  tseriesSubscribers: number;
-  difference: number;
   history: {
     date: number;
     subscribers: number;
@@ -23,8 +21,6 @@ async function initDatabase() {
           lastUpdate: 0,
           subscribers: 0,
         },
-        tseriesSubscribers: 0,
-        difference: 0,
         history: [],
       } satisfies Database),
     );
@@ -39,18 +35,8 @@ let db: Database = await dbFile.json();
 function updateDb() {
   const data = db as any;
   delete data.mrbeastData.hourlyGains;
-  if (data.tseriesData) {
-    data.tseriesSubscribers = data.tseriesData.subscribers;
-    delete data.tseriesData;
-  }
-  if (data.differenceData) {
-    data.difference = data.differenceData.difference;
-    delete data.differenceData;
-  }
   db = {
     mrbeastData: data.mrbeastData,
-    tseriesSubscribers: data.tseriesSubscribers,
-    difference: data.difference,
     history: data.history,
   };
   save();
@@ -64,21 +50,14 @@ export function getLastStats() {
       update: db.mrbeastData.lastUpdate,
       subscribers: db.mrbeastData.subscribers,
     },
-    tseriesSubscribers: db.tseriesSubscribers,
-    difference: db.difference,
   };
 }
 
-export function updateStats(data: {
-  mrbeastSubscribers: number;
-  tseriesSubscribers: number;
-}) {
+export function updateStats(data: { mrbeastSubscribers: number }) {
   db.mrbeastData.lastUpdate = new Date().getTime();
 
   const mrbeastGained = data.mrbeastSubscribers - db.mrbeastData.subscribers;
   db.mrbeastData.subscribers = data.mrbeastSubscribers;
-  db.tseriesSubscribers = data.tseriesSubscribers;
-  db.difference = data.tseriesSubscribers - data.mrbeastSubscribers;
 
   db.history.push({
     date: new Date().getTime(),
