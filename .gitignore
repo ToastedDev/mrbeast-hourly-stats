@@ -176,3 +176,6 @@ dist
 
 # Database
 db.json
+
+db copy.json
+hourly.sh
