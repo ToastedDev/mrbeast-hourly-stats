@@ -336,7 +336,7 @@ export async function updateTask() {
   formData.append(
     "payload_json",
     JSON.stringify({
-      content: `## ${formatEasternTime(currentDate, true, ", ")} EST Report`,
+      content: `## ${formatEasternTime(currentDate, true)} EST Report`,
       attachments: [
         {
           id: 0,
