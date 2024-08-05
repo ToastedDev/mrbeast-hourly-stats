@@ -4,7 +4,7 @@ import { createCanvas, GlobalFonts } from "@napi-rs/canvas";
 import "chartjs-adapter-date-fns";
 import { graphConfiguration } from "./utils/graph";
 import { join } from "node:path";
-import { getDefaultCompilerOptions } from "typescript";
+import fs from "fs";  
 
 Chart.register(...registerables);
 GlobalFonts.registerFromPath(
@@ -64,7 +64,7 @@ function formatEasternTime(
     timeZone: "America/New_York",
   }).format(date);
 
-  return `${datePart}${hasTime ? `${timeSeparator}${timePart} EST` : ""}`;
+  return `${datePart}${hasTime ? `,${timeSeparator}${timePart}` : ""}`;
 }
 
 function getDateInEasternTime(date: Date) {
@@ -188,15 +188,14 @@ export async function updateTask() {
   const subRate =
     (niaData.mrbeast - lastStats.mrbeast.subscribers) /
     (timeTook / 1000);
-  const mrbeastDaily = subRate * 24 * 60 * 60;
 
   const lastHour = history[history.length - 1];
   const hourlyGains = niaData.mrbeast - lastHour.subscribers;
   const hourlyGainsComparedToLast = hourlyGains - lastHour.gained;
   const firstCountInLast24Hours = history.slice(-24)[0];
-  const last12HoursRank =
+  const last24HoursRank =
     [
-      ...history.slice(-11),
+      ...history.slice(-23),
       {
         current: true,
         date: currentDate.getTime(),
@@ -249,13 +248,14 @@ export async function updateTask() {
   const embedObject: Required<WebhookData>["embeds"][number] = {
     title: `${rate && rate.emoji ? `${rate.emoji} ` : ""}Current Subscribers: ${niaData.mrbeast.toLocaleString()}`,
     description: trim(`
-      Ranking vs Last 12 Hours: **${last12HoursRank}/12**
-      Hourly Gains: **${gain(hourlyGains)}** (${gain(hourlyGainsComparedToLast)}) ${hourlyGainsComparedToLast > 0 ? "⏫" : hourlyGainsComparedToLast === 0 ? "" : "⏬"}
-      Minutely Gains: **${gain(subRate * 60, 1)}**
-      Secondly Gains: **${gain(subRate, 2)}**
-      Subscribers Gained Today: **${gain(gainedToday)}**
-      Subscribers Gained in Last 24 Hours: **${gain(niaData.mrbeast - firstCountInLast24Hours.subscribers)}**
-      Subscribers Gained Since Release: **${gain(niaData.mrbeast - firstData.subscribers)}**
+      **Ranking vs Last 24 Hours:** ${last24HoursRank}/24
+      **Daily Average** ${gain(subRate * 60 * 60 * 24, 0)}
+      **Hourly Gains:** ${gain(hourlyGains)} (${gain(hourlyGainsComparedToLast)}) ${hourlyGainsComparedToLast > 0 ? "⏫" : hourlyGainsComparedToLast === 0 ? "" : "⏬"}
+      **Minutely Gains:** ${gain(subRate * 60, 1)}
+      **Secondly Gains:** ${gain(subRate, 2)}
+      **Subscribers Gained Today:** ${gain(gainedToday)}
+      **Subscribers Gained in Last 24 Hours:** ${gain(niaData.mrbeast - firstCountInLast24Hours.subscribers)}
+      **Subscribers Gained Since Release:** ${gain(niaData.mrbeast - firstData.subscribers)}
     `),
     fields: [
       {
@@ -268,8 +268,8 @@ export async function updateTask() {
               date.toISOString().split("T")[0] ===
                 currentDateAsEastern.toISOString().split("T")[0] &&
               date.getHours() === currentDateAsEastern.getHours();
-            return `${isCurrentHour ? "**" : ""}${formatEasternTime(new Date(d.date))}${isCurrentHour ? "**" : ""}: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`;
-          })
+              return `${isCurrentHour ? "**" : ""}${formatEasternTime(new Date(d.date))}${isCurrentHour ? "**" : ""}: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`;
+            })
           .join("\n"),
       },
       {
@@ -288,18 +288,18 @@ export async function updateTask() {
           .join("\n"),
       },
       {
-        name: "Top 15 Highest Hourly Gains",
+        name: "Top 10 Highest Hourly Gains",
         value: history
           .toSorted((a, b) => b.gained - a.gained)
-          .slice(0, 15)
+          .slice(0, 10)
           .map((d, index) => {
             const date = getDateInEasternTime(new Date(d.date));
             const isCurrentHour =
               date.toISOString().split("T")[0] ===
                 currentDateAsEastern.toISOString().split("T")[0] &&
               date.getHours() === currentDateAsEastern.getHours();
-            return `${index + 1}. ${isCurrentHour ? "**" : ""}${formatEasternTime(new Date(d.date))}${isCurrentHour ? "**" : ""}: **${gain(d.gained)}**`;
-          })
+              return `${index + 1}. ${isCurrentHour ? "**" : ""}${formatEasternTime(new Date(d.date))}${isCurrentHour ? "**" : ""}: **${gain(d.gained)}**`;
+            })
           .join("\n"),
       },
     ],
@@ -310,17 +310,22 @@ export async function updateTask() {
   };
 
   const subscriberHistoryGraph = await createGraph(
-    "Subscriber history since release",
+    "Subscriber History Since Release",
     history.map((d) => getDateInEasternTime(new Date(d.date))),
     history.map((d) => d.subscribers),
+    255000000
   );
+
   const hourlyGainsGraph = await createGraph(
-    "Hourly gains in the past 12 hours",
-    history
-      .slice(-12)
-      .map((d) => new Date(getDateInEasternTime(new Date(d.date)))),
-    history.slice(-12).map((d) => d.gained),
+    "Hourly Gains (Past 24 Hours)",
+    history.slice(-24).map((d) => new Date(getDateInEasternTime(new Date(d.date)))),
+    history.slice(-24).map((d) => d.gained),
+    undefined,
+    true 
   );
+
+  fs.writeFileSync('subscriber_history.png', subscriberHistoryGraph);
+  fs.writeFileSync('hourly_gains.png', hourlyGainsGraph);
 
   updateStats({
     mrbeastSubscribers: niaData.mrbeast,
@@ -331,16 +336,16 @@ export async function updateTask() {
   formData.append(
     "payload_json",
     JSON.stringify({
-      content: `# ${formatEasternTime(currentDate, true, ", ")} REPORT`,
+      content: `## ${formatEasternTime(currentDate, true, ", ")} EST Report`,
       attachments: [
         {
           id: 0,
-          description: "Subscriber history since release",
+          description: "Subscriber History Since Release",
           filename: "subscriber_history.png",
         },
         {
           id: 1,
-          description: "Hourly gains in the past 12 hours",
+          description: "Hourly Gains (Past 24 Hours)",
           filename: "hourly_gains.png",
         },
       ],
@@ -360,31 +365,31 @@ export async function updateTask() {
   });
 }
 
-function createGraph(
+async function createGraph(
   title: string,
   dates: Date[],
   subscriberHistory: number[],
+  startValue?: number,
+  isHourlyGainsGraph = false,
 ) {
   const canvas = createCanvas(1200, 700);
   const ctx = canvas.getContext("2d");
 
-  const chart = new Chart(
-    ctx as any,
-    graphConfiguration(title, {
-      labels: dates,
-      datasets: [
-        {
-          label: "",
-          data: subscriberHistory,
-          backgroundColor: "#2DD4FF",
-          borderColor: "#2DD4FF",
-          borderWidth: 6,
-          tension: 0.2,
-          pointRadius: 0,
-        },
-      ],
-    }),
-  );
+  const chartConfig = graphConfiguration(title, {
+    labels: dates,
+    datasets: [
+      {
+        label: "Subscribers",
+        data: subscriberHistory,
+        backgroundColor: "rgba(45, 212, 255, 0.2)",
+        borderColor: "#2DD4FF",
+        borderWidth: 4,
+        fill: true,
+      },
+    ],
+  }, startValue, isHourlyGainsGraph);
+
+  const chart = new Chart(ctx as any, chartConfig);
 
   chart.draw();
 

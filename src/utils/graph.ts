@@ -13,58 +13,68 @@ const backgroundColorPlugin = {
   beforeDraw: (chart) => {
     const { ctx } = chart;
     ctx.save();
-    ctx.fillStyle = "white";
+    ctx.fillStyle = "#ffffff"; 
     ctx.fillRect(0, 0, chart.width, chart.height);
     ctx.restore();
+  },
+} satisfies Plugin;
+
+const roundedCornersPlugin = {
+  id: "roundedCornersPlugin",
+  afterUpdate: (chart) => {
+    if (chart.options.elements && chart.options.elements.line) {
+      chart.options.elements.line.capBezierPoints = true;
+    }
   },
 } satisfies Plugin;
 
 export const graphConfiguration = (
   title: string,
   data: ChartData,
+  startValue?: number,
+  isHourlyGainsGraph = false,
 ): ChartConfiguration => ({
   type: "line",
   data,
   options: {
+    responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       title: {
         display: true,
         text: title,
         font: { size: 24, weight: "bold", family: "InterBold" },
-        color: "black",
+        color: "#333333",
+        padding: {
+          top: 20,
+          bottom: 10,
+        },
       },
       legend: {
         display: false,
-        labels: {
-          usePointStyle: true,
-        },
-      },
-      subtitle: {
-        display: true,
-        text: "MrBeast Statistics",
-        position: "bottom",
-        align: "end",
       },
     },
     scales: {
       y: {
         beginAtZero: false,
+        suggestedMin: startValue,
         ticks: {
-          font: { size: 14, weight: "normal" },
-          color: "#333333",
+          font: { size: 14, weight: "normal", family: "InterRegular" },
+          color: "#555555",
           autoSkip: true,
-          maxTicksLimit: 8,
-          maxRotation: 0,
-          minRotation: 0,
+          maxTicksLimit: 10,
+          padding: 10,
         },
-        grid: { color: "#eaeaea" },
+        grid: { color: "#e0e0e0" },
       },
       x: {
         type: "time",
         time: {
-          unit: "day",
+          unit: isHourlyGainsGraph ? "hour" : "day",
+          tooltipFormat: isHourlyGainsGraph ? "MMM dd, yyyy HH:mm" : "MMM dd, yyyy",
           displayFormats: {
-            day: "yyyy-MM-dd HH:mm",
+            hour: "HH:mm",
+            day: "MMM dd, yyyy",
           },
         },
         adapters: {
@@ -73,16 +83,36 @@ export const graphConfiguration = (
           },
         },
         ticks: {
-          font: { size: 14, weight: "normal" },
-          color: "#333333",
+          font: { size: 14, weight: "normal", family: "InterRegular" },
+          color: "#555555",
           autoSkip: true,
-          maxTicksLimit: 18,
-          maxRotation: 45,
-          minRotation: 45,
+          maxTicksLimit: 10, // Ensure only 10 ticks are displayed
+          padding: 10,
+          callback: function (val, index, ticks) {
+            if (isHourlyGainsGraph) {
+              return new Date(val).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } else {
+              return new Date(val).toLocaleDateString([], { month: 'short', day: 'numeric' });
+            }
+          }
         },
-        grid: { display: true },
+        grid: { color: "#e0e0e0" },
+      },
+    },
+    elements: {
+      line: {
+        borderWidth: 4,
+        tension: 0.3,
+        borderColor: "#2DD4FF",
+        backgroundColor: "rgba(45, 212, 255, 0.2)",
+        fill: true,
+      },
+      point: {
+        radius: 0,
+        hoverRadius: 7,
+        hoverBorderWidth: 3,
       },
     },
   },
-  plugins: [backgroundColorPlugin],
+  plugins: [backgroundColorPlugin, roundedCornersPlugin],
 });
