@@ -284,11 +284,17 @@ export async function updateTask() {
         value: history
           .slice(-12)
           .map((d, i) => {
+            const rate = rates.find(
+              (r) =>
+                (r.min ?? 0) <= d.gained && (r.max ? r.max >= d.gained : true)
+            );
             return `* ${i === 11 ? "**" : ""}${formatEasternTime(
               new Date(d.date)
             )}${
               i === 11 ? "**" : ""
-            }: ${d.subscribers.toLocaleString()} ( ${gain(d.gained)} )`;
+            }: ${d.subscribers.toLocaleString()} ( ${gain(d.gained)} ) ${
+              rate ? rate.emoji : ""
+            }`;
           })
           .join("\n"),
       },
