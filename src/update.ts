@@ -281,16 +281,11 @@ export async function updateTask() {
         name: "Hourly Gains, Last 12 Hours",
         value: history
           .slice(-12)
-          .map((d) => {
-            const date = getDateInEasternTime(new Date(d.date));
-            const isCurrentHour =
-              date.toISOString().split("T")[0] ===
-                currentDateAsEastern.toISOString().split("T")[0] &&
-              date.getHours() === currentDateAsEastern.getHours();
-            return `* ${isCurrentHour ? "**" : ""}${formatEasternTime(
+          .map((d, i) => {
+            return `* ${i === 11 ? "**" : ""}${formatEasternTime(
               new Date(d.date)
             )}${
-              isCurrentHour ? "**" : ""
+              i === 11 ? "**" : ""
             }: ${d.subscribers.toLocaleString()} ( ${gain(d.gained)} )`;
           })
           .join("\n"),
@@ -299,18 +294,11 @@ export async function updateTask() {
         name: "Daily Gains, Last 7 Days",
         value: dailyData
           .slice(-7)
-          .map((d) => {
+          .map((d, i) => {
             const dt = new Date(d.date);
             dt.setDate(dt.getDate() + 1);
-            const date = getDateInEasternTime(new Date(d.date));
-            const isCurrentDate =
-              date.toISOString().split("T")[0] ===
-              currentDateAsEastern.toISOString().split("T")[0];
-            return `* ${isCurrentDate ? "**" : ""}${formatEasternTime(
-              dt,
-              false
-            )}${
-              isCurrentDate ? "**" : ""
+            return `* ${i === 6 ? "**" : ""}${formatEasternTime(dt, false)}${
+              i === 6 ? "**" : ""
             }: ${d.subscribers.toLocaleString()} ( ${gain(d.gained)} )`;
           })
           .join("\n"),
