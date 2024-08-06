@@ -22,7 +22,7 @@ async function initDatabase() {
           subscribers: 0,
         },
         history: [],
-      } satisfies Database),
+      } satisfies Database)
     );
   }
 }

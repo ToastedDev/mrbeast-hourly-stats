@@ -13,7 +13,7 @@ const backgroundColorPlugin = {
   beforeDraw: (chart) => {
     const { ctx } = chart;
     ctx.save();
-    ctx.fillStyle = "#ffffff"; 
+    ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, chart.width, chart.height);
     ctx.restore();
   },
@@ -32,7 +32,7 @@ export const graphConfiguration = (
   title: string,
   data: ChartData,
   startValue?: number,
-  isHourlyGainsGraph = false,
+  isHourlyGainsGraph = false
 ): ChartConfiguration => ({
   type: "line",
   data,
@@ -71,7 +71,9 @@ export const graphConfiguration = (
         type: "time",
         time: {
           unit: isHourlyGainsGraph ? "hour" : "day",
-          tooltipFormat: isHourlyGainsGraph ? "MMM dd, yyyy HH:mm" : "MMM dd, yyyy",
+          tooltipFormat: isHourlyGainsGraph
+            ? "MMM dd, yyyy HH:mm"
+            : "MMM dd, yyyy",
           displayFormats: {
             hour: "HH:mm",
             day: "MMM dd, yyyy",
@@ -86,15 +88,21 @@ export const graphConfiguration = (
           font: { size: 14, weight: "normal", family: "InterRegular" },
           color: "#555555",
           autoSkip: true,
-          maxTicksLimit: 10, // Ensure only 10 ticks are displayed
+          maxTicksLimit: 10,
           padding: 10,
           callback: function (val, index, ticks) {
             if (isHourlyGainsGraph) {
-              return new Date(val).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              return new Date(val).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              });
             } else {
-              return new Date(val).toLocaleDateString([], { month: 'short', day: 'numeric' });
+              return new Date(val).toLocaleDateString([], {
+                month: "short",
+                day: "numeric",
+              });
             }
-          }
+          },
         },
         grid: { color: "#e0e0e0" },
       },

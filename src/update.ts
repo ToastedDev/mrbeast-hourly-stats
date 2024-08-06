@@ -4,16 +4,16 @@ import { createCanvas, GlobalFonts } from "@napi-rs/canvas";
 import "chartjs-adapter-date-fns";
 import { graphConfiguration } from "./utils/graph";
 import { join } from "node:path";
-import fs from "fs";  
+import fs from "fs";
 
 Chart.register(...registerables);
 GlobalFonts.registerFromPath(
   join(process.cwd(), "fonts/Inter-Regular.ttf"),
-  "InterRegular",
+  "InterRegular"
 );
 GlobalFonts.registerFromPath(
   join(process.cwd(), "fonts/Inter-Bold.ttf"),
-  "InterBold",
+  "InterBold"
 );
 
 interface NiaData {
@@ -43,26 +43,30 @@ interface WebhookData {
 }
 
 const gain = (gain: number, precision: number = 0) =>
-  `${gain > 0 ? "+" : ""}${parseFloat(gain.toFixed(precision)).toLocaleString()}`;
+  `${gain > 0 ? "+" : ""}${parseFloat(
+    gain.toFixed(precision)
+  ).toLocaleString()}`;
 
 function formatEasternTime(
   date: Date,
   hasTime = true,
   timeSeparator = " ",
-  fullTime = false,
+  fullTime = false
 ) {
   const datePart = new Intl.DateTimeFormat("en-US", {
-    month: "long",
+    month: "short",
     day: "2-digit",
     timeZone: "America/New_York",
   }).format(date);
-  const timePart = new Intl.DateTimeFormat("en-US", {
+  let timePart = new Intl.DateTimeFormat("en-US", {
     hour: fullTime ? "2-digit" : "numeric",
     minute: fullTime ? "2-digit" : undefined,
     second: fullTime ? "2-digit" : undefined,
     hour12: true,
     timeZone: "America/New_York",
   }).format(date);
+
+  timePart = timePart.replace(" AM", "am").replace(" PM", "pm");
 
   return `${datePart}${hasTime ? `,${timeSeparator}${timePart}` : ""}`;
 }
@@ -71,7 +75,7 @@ function getDateInEasternTime(date: Date) {
   return new Date(
     date.toLocaleString("en-US", {
       timeZone: "America/New_York",
-    }),
+    })
   );
 }
 
@@ -140,7 +144,7 @@ const rates: Rate[] = [
     min: 100000,
     emoji: "<:SuperFire:1246879449962778624>",
     color: "#03befc",
-  }
+  },
 ];
 
 function hexToDecimalColor(hexString: string) {
@@ -172,11 +176,13 @@ export async function updateTask() {
     console.error("Fetch error from primary URL:", error);
 
     try {
-      response = await fetch("https://nia-statistics.com/api/get?platform=youtube&type=channel&id=UCX6OQ3DkcsbYNE6H8uQQuVA");
+      response = await fetch(
+        "https://nia-statistics.com/api/get?platform=youtube&type=channel&id=UCX6OQ3DkcsbYNE6H8uQQuVA"
+      );
       const fallbackData = await response.json();
       niaData = {
         mrbeast: fallbackData.estSubCount,
-        time: Date.now()
+        time: Date.now(),
       };
     } catch (fallbackError) {
       console.error("Fetch error from fallback URL:", fallbackError);
@@ -186,8 +192,7 @@ export async function updateTask() {
 
   const timeTook = currentDate.getTime() - lastStats.mrbeast.update;
   const subRate =
-    (niaData.mrbeast - lastStats.mrbeast.subscribers) /
-    (timeTook / 1000);
+    (niaData.mrbeast - lastStats.mrbeast.subscribers) / (timeTook / 1000);
 
   const lastHour = history[history.length - 1];
   const hourlyGains = niaData.mrbeast - lastHour.subscribers;
@@ -224,10 +229,10 @@ export async function updateTask() {
           };
         }
 
-        acc[date].subscribers = data.subscribers; 
+        acc[date].subscribers = data.subscribers;
 
         return acc;
-      }, {} as any),
+      }, {} as any)
     ) as {
       date: number;
       subscribers: number;
@@ -242,24 +247,38 @@ export async function updateTask() {
   const gainedToday = dailyData[dailyData.length - 1].gained;
 
   const rate = rates.find(
-    (r) => (r.min ?? 0) <= hourlyGains && (r.max ? r.max >= hourlyGains : true),
+    (r) => (r.min ?? 0) <= hourlyGains && (r.max ? r.max >= hourlyGains : true)
   );
 
   const embedObject: Required<WebhookData>["embeds"][number] = {
-    title: `${rate && rate.emoji ? `${rate.emoji} ` : ""}Current Subscribers: ${niaData.mrbeast.toLocaleString()}`,
+    title: `${
+      rate && rate.emoji ? `${rate.emoji} ` : ""
+    }Current Subscribers: ${niaData.mrbeast.toLocaleString()}`,
     description: trim(`
       **Ranking vs Last 24 Hours:** ${last24HoursRank}/24
       **Daily Average** ${gain(subRate * 60 * 60 * 24, 0)}
-      **Hourly Gains:** ${gain(hourlyGains)} (${gain(hourlyGainsComparedToLast)}) ${hourlyGainsComparedToLast > 0 ? "⏫" : hourlyGainsComparedToLast === 0 ? "" : "⏬"}
+      **Hourly Gains:** ${gain(hourlyGains)} ( ${gain(
+      hourlyGainsComparedToLast
+    )} ) ${
+      hourlyGainsComparedToLast > 0
+        ? "⏫"
+        : hourlyGainsComparedToLast === 0
+        ? ""
+        : "⏬"
+    }
       **Minutely Gains:** ${gain(subRate * 60, 1)}
       **Secondly Gains:** ${gain(subRate, 2)}
       **Subscribers Gained Today:** ${gain(gainedToday)}
-      **Subscribers Gained in Last 24 Hours:** ${gain(niaData.mrbeast - firstCountInLast24Hours.subscribers)}
-      **Subscribers Gained Since Release:** ${gain(niaData.mrbeast - firstData.subscribers)}
+      **Subscribers Gained in Last 24 Hours:** ${gain(
+        niaData.mrbeast - firstCountInLast24Hours.subscribers
+      )}
+      **Subscribers Gained Since Release:** ${gain(
+        niaData.mrbeast - firstData.subscribers
+      )}
     `),
     fields: [
       {
-        name: "Last 12 Hours",
+        name: "Hourly Gains, Last 12 Hours",
         value: history
           .slice(-12)
           .map((d) => {
@@ -268,12 +287,16 @@ export async function updateTask() {
               date.toISOString().split("T")[0] ===
                 currentDateAsEastern.toISOString().split("T")[0] &&
               date.getHours() === currentDateAsEastern.getHours();
-              return `${isCurrentHour ? "**" : ""}${formatEasternTime(new Date(d.date))}${isCurrentHour ? "**" : ""}: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`;
-            })
+            return `* ${isCurrentHour ? "**" : ""}${formatEasternTime(
+              new Date(d.date)
+            )}${
+              isCurrentHour ? "**" : ""
+            }: ${d.subscribers.toLocaleString()} ( ${gain(d.gained)} )`;
+          })
           .join("\n"),
       },
       {
-        name: "Last 7 Days",
+        name: "Daily Gains, Last 7 Days",
         value: dailyData
           .slice(-7)
           .map((d) => {
@@ -283,7 +306,12 @@ export async function updateTask() {
             const isCurrentDate =
               date.toISOString().split("T")[0] ===
               currentDateAsEastern.toISOString().split("T")[0];
-            return `${isCurrentDate ? "**" : ""}${formatEasternTime(dt, false)}${isCurrentDate ? "**" : ""}: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`;
+            return `* ${isCurrentDate ? "**" : ""}${formatEasternTime(
+              dt,
+              false
+            )}${
+              isCurrentDate ? "**" : ""
+            }: ${d.subscribers.toLocaleString()} ( ${gain(d.gained)} )`;
           })
           .join("\n"),
       },
@@ -298,8 +326,12 @@ export async function updateTask() {
               date.toISOString().split("T")[0] ===
                 currentDateAsEastern.toISOString().split("T")[0] &&
               date.getHours() === currentDateAsEastern.getHours();
-              return `${index + 1}. ${isCurrentHour ? "**" : ""}${formatEasternTime(new Date(d.date))}${isCurrentHour ? "**" : ""}: ${gain(d.gained)}`;
-            })
+            return `${index + 1}. ${
+              isCurrentHour ? "**" : ""
+            }${formatEasternTime(new Date(d.date))}${
+              isCurrentHour ? "**" : ""
+            }: ${gain(d.gained)}`;
+          })
           .join("\n"),
       },
     ],
@@ -318,14 +350,16 @@ export async function updateTask() {
 
   const hourlyGainsGraph = await createGraph(
     "Hourly Gains (Past 24 Hours)",
-    history.slice(-24).map((d) => new Date(getDateInEasternTime(new Date(d.date)))),
+    history
+      .slice(-24)
+      .map((d) => new Date(getDateInEasternTime(new Date(d.date)))),
     history.slice(-24).map((d) => d.gained),
     undefined,
-    true 
+    true
   );
 
-  fs.writeFileSync('subscriber_history.png', subscriberHistoryGraph);
-  fs.writeFileSync('hourly_gains.png', hourlyGainsGraph);
+  fs.writeFileSync("subscriber_history.png", subscriberHistoryGraph);
+  fs.writeFileSync("hourly_gains.png", hourlyGainsGraph);
 
   updateStats({
     mrbeastSubscribers: niaData.mrbeast,
@@ -348,12 +382,12 @@ export async function updateTask() {
         },
       ],
       embeds: [embedObject],
-      }),
+    })
   );
   formData.append(
     "files[0]",
     new Blob([subscriberHistoryGraph]),
-    "subscriber_history.png",
+    "subscriber_history.png"
   );
   formData.append("files[1]", new Blob([hourlyGainsGraph]), "hourly_gains.png");
 
@@ -368,7 +402,7 @@ async function createGraph(
   dates: Date[],
   subscriberHistory: number[],
   startValue?: number,
-  isHourlyGainsGraph = false,
+  isHourlyGainsGraph = false
 ) {
   const canvas = createCanvas(1200, 700);
   const ctx = canvas.getContext("2d");
@@ -376,19 +410,24 @@ async function createGraph(
   const currentDate = new Date();
   const formattedDate = formatEasternTime(currentDate, true);
 
-  const chartConfig = graphConfiguration(`${title}, as of ${formattedDate}`, {
-    labels: dates,
-    datasets: [
-      {
-        label: "Subscribers",
-        data: subscriberHistory,
-        backgroundColor: "rgba(45, 212, 255, 0.2)",
-        borderColor: "#2DD4FF",
-        borderWidth: 4,
-        fill: true,
-      },
-    ],
-  }, startValue, isHourlyGainsGraph);
+  const chartConfig = graphConfiguration(
+    `${title}, as of ${formattedDate}`,
+    {
+      labels: dates,
+      datasets: [
+        {
+          label: "Subscribers",
+          data: subscriberHistory,
+          backgroundColor: "rgba(45, 212, 255, 0.2)",
+          borderColor: "#2DD4FF",
+          borderWidth: 4,
+          fill: true,
+        },
+      ],
+    },
+    startValue,
+    isHourlyGainsGraph
+  );
 
   const chart = new Chart(ctx as any, chartConfig);
 

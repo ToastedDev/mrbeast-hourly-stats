@@ -6,7 +6,7 @@ const cron = new CronJob(
   updateTask,
   null,
   true,
-  "America/New_York",
+  "America/New_York"
 );
 cron.start();
 

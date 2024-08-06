@@ -4,7 +4,7 @@ async function main() {
   const csvFile = Bun.file("./MrBeast_Subscribers.csv");
   const csv = await csvFile.text();
   const lines = csv.split("\n");
-  lines.shift(); // Remove header line
+  lines.shift();
 
   let previousSubscribers = 0;
   const history = lines.map((line, index) => {
@@ -22,7 +22,6 @@ async function main() {
     return { time, subscribers, subscribersGained };
   });
 
-  // Convert to hourly data
   const hourlyData: {
     date: number;
     subscribers: number;
@@ -35,7 +34,7 @@ async function main() {
   history.forEach((dataPoint, index) => {
     const { time, subscribers, subscribersGained } = dataPoint;
     const hour = new Date(time);
-    hour.setMinutes(0, 0, 0); // Set minutes, seconds, and milliseconds to 0
+    hour.setMinutes(0, 0, 0);
 
     if (!currentHour || currentHour.getTime() !== hour.getTime()) {
       if (currentHour) {
@@ -52,7 +51,6 @@ async function main() {
     hourlySubscribersGained += subscribersGained;
     lastSubscribers = subscribers;
 
-    // If it's the last data point, push the accumulated data
     if (index === history.length - 1) {
       hourlyData.push({
         date: currentHour.getTime(),
@@ -72,7 +70,7 @@ async function main() {
         subscribers: lastSubscribers,
         hourlyGains: hourlySubscribersGained,
         history: hourlyData,
-      }),
+      })
     );
   }
 
