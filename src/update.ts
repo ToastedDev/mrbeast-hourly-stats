@@ -293,7 +293,7 @@ export async function updateTask() {
             )}${
               i === 11 ? "**" : ""
             }: ${d.subscribers.toLocaleString()} ( ${gain(d.gained)} ) ${
-              rate ? rate.emoji : ""
+              rate && rate.emoji ? rate.emoji : ""
             }`;
           })
           .join("\n"),
