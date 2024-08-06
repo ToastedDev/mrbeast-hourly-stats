@@ -340,17 +340,15 @@ export async function updateTask() {
       attachments: [
         {
           id: 0,
-          description: "Subscriber History Since Release",
           filename: "subscriber_history.png",
         },
         {
           id: 1,
-          description: "Hourly Gains (Past 24 Hours)",
           filename: "hourly_gains.png",
         },
       ],
       embeds: [embedObject],
-    }),
+      }),
   );
   formData.append(
     "files[0]",
@@ -375,7 +373,10 @@ async function createGraph(
   const canvas = createCanvas(1200, 700);
   const ctx = canvas.getContext("2d");
 
-  const chartConfig = graphConfiguration(title, {
+  const currentDate = new Date();
+  const formattedDate = formatEasternTime(currentDate, true);
+
+  const chartConfig = graphConfiguration(`${title}, as of ${formattedDate}`, {
     labels: dates,
     datasets: [
       {
