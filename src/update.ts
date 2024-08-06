@@ -220,16 +220,18 @@ export async function updateTask() {
   const dailyData = (
     Object.values(
       history.reduce((acc, data) => {
-        const date = formatEasternTime(new Date(data.date), false);
+        const date = getDateInEasternTime(new Date(data.date));
+        if (date.getHours() === 0) date.setDate(date.getDate() - 1);
+        const formattedDate = formatEasternTime(date, false);
 
-        if (!acc[date]) {
-          acc[date] = {
+        if (!acc[formattedDate]) {
+          acc[formattedDate] = {
             date: getDateInEasternTime(new Date(data.date)).getTime(),
             subscribers: data.subscribers,
           };
         }
 
-        acc[date].subscribers = data.subscribers;
+        acc[formattedDate].subscribers = data.subscribers;
 
         return acc;
       }, {} as any)
