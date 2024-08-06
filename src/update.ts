@@ -52,7 +52,7 @@ function formatEasternTime(
   fullTime = false,
 ) {
   const datePart = new Intl.DateTimeFormat("en-US", {
-    month: "short",
+    month: "long",
     day: "2-digit",
     timeZone: "America/New_York",
   }).format(date);
@@ -298,7 +298,7 @@ export async function updateTask() {
               date.toISOString().split("T")[0] ===
                 currentDateAsEastern.toISOString().split("T")[0] &&
               date.getHours() === currentDateAsEastern.getHours();
-              return `${index + 1}. ${isCurrentHour ? "**" : ""}${formatEasternTime(new Date(d.date))}${isCurrentHour ? "**" : ""}: **${gain(d.gained)}**`;
+              return `${index + 1}. ${isCurrentHour ? "**" : ""}${formatEasternTime(new Date(d.date))}${isCurrentHour ? "**" : ""}: ${gain(d.gained)}`;
             })
           .join("\n"),
       },
