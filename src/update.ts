@@ -259,14 +259,14 @@ export async function updateTask() {
     description: trim(`
       **Ranking vs Last 24 Hours:** ${last24HoursRank}/24
       **Daily Average** ${gain(subRate * 60 * 60 * 24, 0)}
-      **Hourly Gains:** ${gain(hourlyGains)} ( ${gain(
+      **Hourly Gains:** ${gain(hourlyGains)} (${gain(
       hourlyGainsComparedToLast
-    )} ) ${
+    )}) ${
       hourlyGainsComparedToLast > 0
-        ? "⏫"
+        ? "⬆️"
         : hourlyGainsComparedToLast === 0
         ? ""
-        : "⏬"
+        : "⬇️s"
     }
       **Minutely Gains:** ${gain(subRate * 60, 1)}
       **Secondly Gains:** ${gain(subRate, 2)}
@@ -292,7 +292,7 @@ export async function updateTask() {
               new Date(d.date)
             )}${
               i === 11 ? "**" : ""
-            }: ${d.subscribers.toLocaleString()} ( ${gain(d.gained)} ) ${
+            }: ${d.subscribers.toLocaleString()} (${gain(d.gained)}) ${
               rate && rate.emoji ? rate.emoji : ""
             }`;
           })
@@ -307,7 +307,7 @@ export async function updateTask() {
             dt.setDate(dt.getDate() + 1);
             return `* ${i === 6 ? "**" : ""}${formatEasternTime(dt, false)}${
               i === 6 ? "**" : ""
-            }: ${d.subscribers.toLocaleString()} ( ${gain(d.gained)} )`;
+            }: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`;
           })
           .join("\n"),
       },
