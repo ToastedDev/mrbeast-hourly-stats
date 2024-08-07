@@ -266,7 +266,7 @@ export async function updateTask() {
         ? "⬆️"
         : hourlyGainsComparedToLast === 0
         ? ""
-        : "⬇️s"
+        : "⬇️"
     }
       **Minutely Gains:** ${gain(subRate * 60, 1)}
       **Secondly Gains:** ${gain(subRate, 2)}
