@@ -170,8 +170,8 @@ export async function updateTask() {
 
   let response, niaData;
   try {
-    response = await fetch("https://raw.nia-statistics.com/totalcounts");
-    niaData = (await response.json()).data as NiaData;
+    response = await fetch("https://mrb.toasted.dev/count");
+    niaData = (await response.json()) as NiaData;
   } catch (error) {
     console.error("Fetch error from primary URL:", error);
 
