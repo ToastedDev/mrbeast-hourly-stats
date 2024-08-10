@@ -6,7 +6,7 @@ import {
 } from "chart.js";
 import { enUS } from "date-fns/locale";
 
-Chart.defaults.font.family = "InterRegular";
+Chart.defaults.font.family = "PoppinsSemiBold";
 
 const backgroundColorPlugin = {
   id: "backgroundColorPlugin",
@@ -43,7 +43,7 @@ export const graphConfiguration = (
       title: {
         display: true,
         text: title,
-        font: { size: 24, weight: "bold", family: "InterBold" },
+        font: { size: 24, weight: "bold", family: "PoppinsExtraBold" },
         color: "#333333",
         padding: {
           top: 20,
@@ -59,10 +59,10 @@ export const graphConfiguration = (
         beginAtZero: false,
         suggestedMin: startValue,
         ticks: {
-          font: { size: 14, weight: "normal", family: "InterRegular" },
+          font: { size: 14, weight: "normal", family: "PoppinsMedium" },
           color: "#555555",
           autoSkip: true,
-          maxTicksLimit: 10,
+          maxTicksLimit: isHourlyGainsGraph ? 12 : 8,
           padding: 10,
         },
         grid: { color: "#e0e0e0" },
@@ -85,10 +85,10 @@ export const graphConfiguration = (
           },
         },
         ticks: {
-          font: { size: 14, weight: "normal", family: "InterRegular" },
+          font: { size: 14, weight: "normal", family: "PoppinsMedium" },
           color: "#555555",
           autoSkip: true,
-          maxTicksLimit: 10,
+          maxTicksLimit: isHourlyGainsGraph ? 10 : 10,
           padding: 10,
           callback: function (val, index, ticks) {
             if (isHourlyGainsGraph) {

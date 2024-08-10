@@ -8,12 +8,17 @@ import fs from "fs";
 
 Chart.register(...registerables);
 GlobalFonts.registerFromPath(
-  join(process.cwd(), "fonts/Inter-Regular.ttf"),
-  "InterRegular"
+  join(process.cwd(), "fonts/Poppins-Medium.ttf"),
+  "PoppinsMedium"
 );
 GlobalFonts.registerFromPath(
-  join(process.cwd(), "fonts/Inter-Bold.ttf"),
-  "InterBold"
+  join(process.cwd(), "fonts/Poppins-ExtraBold.ttf"),
+  "PoppinsExtraBold"
+);
+
+GlobalFonts.registerFromPath(
+  join(process.cwd(), "fonts/Poppins-SemiBold.ttf"),
+  "PoppinsSemiBold"
 );
 
 interface NiaData {
@@ -400,14 +405,14 @@ async function createGraph(
   startValue?: number,
   isHourlyGainsGraph = false
 ) {
-  const canvas = createCanvas(1200, 700);
+  const canvas = createCanvas(1200, 800);
   const ctx = canvas.getContext("2d");
 
   const currentDate = new Date();
   const formattedDate = formatEasternTime(currentDate, true);
 
   const chartConfig = graphConfiguration(
-    `${title}, as of ${formattedDate}`,
+    `${title} as of ${formattedDate}`,
     {
       labels: dates,
       datasets: [
