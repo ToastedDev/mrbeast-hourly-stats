@@ -22,8 +22,7 @@ GlobalFonts.registerFromPath(
 );
 
 interface NiaData {
-  mrbeast: number;
-  time: number;
+  estSubCount: number;
 }
 
 interface WebhookData {
@@ -175,32 +174,24 @@ export async function updateTask() {
 
   let response, niaData;
   try {
-    response = await fetch("https://mrb.toasted.dev/count");
-    niaData = (await response.json()) as NiaData;
+    response = await fetch(
+      "https://nia-statistics.com/api/get?platform=youtube&type=channel&id=UCX6OQ3DkcsbYNE6H8uQQuVA"
+    );
+    const fallbackData = await response.json();
+    niaData = {
+      estSubCount: fallbackData.estSubCount,
+    };
   } catch (error) {
-    console.error("Fetch error from primary URL:", error);
-
-    try {
-      response = await fetch(
-        "https://nia-statistics.com/api/get?platform=youtube&type=channel&id=UCX6OQ3DkcsbYNE6H8uQQuVA"
-      );
-      const fallbackData = await response.json();
-      niaData = {
-        mrbeast: fallbackData.estSubCount,
-        time: Date.now(),
-      };
-    } catch (fallbackError) {
-      console.error("Fetch error from fallback URL:", fallbackError);
-      return;
-    }
+    console.error("Fetch error from nia-statistics API:", error);
+    return;
   }
 
   const timeTook = currentDate.getTime() - lastStats.mrbeast.update;
   const subRate =
-    (niaData.mrbeast - lastStats.mrbeast.subscribers) / (timeTook / 1000);
+    (niaData.estSubCount - lastStats.mrbeast.subscribers) / (timeTook / 1000);
 
   const lastHour = history[history.length - 1];
-  const hourlyGains = niaData.mrbeast - lastHour.subscribers;
+  const hourlyGains = niaData.estSubCount - lastHour.subscribers;
   const hourlyGainsComparedToLast = hourlyGains - lastHour.gained;
   const firstCountInLast24Hours = history.slice(-24)[0];
   const last24HoursRank =
@@ -209,7 +200,7 @@ export async function updateTask() {
       {
         current: true,
         date: currentDate.getTime(),
-        subscribers: niaData.mrbeast,
+        subscribers: niaData.estSubCount,
         gained: hourlyGains,
       },
     ]
@@ -218,7 +209,7 @@ export async function updateTask() {
 
   history.push({
     date: new Date().getTime(),
-    subscribers: niaData.mrbeast,
+    subscribers: niaData.estSubCount,
     gained: hourlyGains,
   });
 
@@ -260,7 +251,7 @@ export async function updateTask() {
   const embedObject: Required<WebhookData>["embeds"][number] = {
     title: `${
       rate && rate.emoji ? `${rate.emoji} ` : ""
-    }Current Subscribers: ${niaData.mrbeast.toLocaleString()}`,
+    }Current Subscribers: ${niaData.estSubCount.toLocaleString()}`,
     description: trim(`
       **Ranking vs Last 24 Hours:** ${last24HoursRank}/24
       **Daily Average** ${gain(subRate * 60 * 60 * 24, 0)}
@@ -277,10 +268,10 @@ export async function updateTask() {
       **Secondly Gains:** ${gain(subRate, 2)}
       **Subscribers Gained Today:** ${gain(gainedToday)}
       **Subscribers Gained in Last 24 Hours:** ${gain(
-        niaData.mrbeast - firstCountInLast24Hours.subscribers
+        niaData.estSubCount - firstCountInLast24Hours.subscribers
       )}
       **Subscribers Gained Since Release:** ${gain(
-        niaData.mrbeast - firstData.subscribers
+        niaData.estSubCount - firstData.subscribers
       )}
     `),
     fields: [
@@ -363,7 +354,7 @@ export async function updateTask() {
   fs.writeFileSync("hourly_gains.png", hourlyGainsGraph);
 
   updateStats({
-    mrbeastSubscribers: niaData.mrbeast,
+    mrbeastSubscribers: niaData.estSubCount,
   });
   save();
 
