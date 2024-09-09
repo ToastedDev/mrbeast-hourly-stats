@@ -104,12 +104,12 @@ const rates: Rate[] = [
   },
   {
     min: 6999,
-    max: 9999,
+    max: 8999,
     emoji: "<:BronzeFire:1282650044159361044>",
     color: "#8c5b1f",
   },
   {
-    min: 9999,
+    min: 9000,
     max: 10999,
     emoji: "🔥",
     color: "#ffa500",
