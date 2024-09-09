@@ -99,11 +99,11 @@ interface Rate {
 
 const rates: Rate[] = [
   {
-    max: 6999,
+    max: 5999,
     color: "#ffffff",
   },
   {
-    min: 6999,
+    min: 6000,
     max: 8999,
     emoji: "<:BronzeFire:1282650044159361044>",
     color: "#8c5b1f",
