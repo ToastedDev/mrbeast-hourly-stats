@@ -213,6 +213,16 @@ export async function updateTask() {
       .sort((a, b) => b.gained - a.gained)
       .findIndex((d) => (d as any).current) + 1;
 
+  const allTimeRank =
+    history
+      .concat({
+        date: currentDate.getTime(),
+        subscribers: niaData.estSubCount,
+        gained: hourlyGains,
+      })
+      .sort((a, b) => b.gained - a.gained)
+      .findIndex((d) => d.date === currentDate.getTime()) + 1;
+
   history.push({
     date: new Date().getTime(),
     subscribers: niaData.estSubCount,
@@ -248,18 +258,19 @@ export async function updateTask() {
       gained: d.subscribers - (last ? last.subscribers : 0),
     };
   });
-  const gainedToday = dailyData[dailyData.length - 1].gained;
 
   const rate = rates.find(
     (r) => (r.min ?? 0) <= hourlyGains && (r.max ? r.max >= hourlyGains : true)
   );
 
   const embedObject: Required<WebhookData>["embeds"][number] = {
-    title: `${
-      rate && rate.emoji ? `${rate.emoji} ` : ""
-    }Current Subscribers: ${niaData.estSubCount.toLocaleString()}`,
+    title: `${rate && rate.emoji ? `${rate.emoji} ` : ""}
+    Current Subscribers: ${niaData.estSubCount.toLocaleString()}`,
     description: trim(`
       **Ranking vs Last 24 Hours:** ${last24HoursRank}/24
+      **Ranking vs All Time:** ${allTimeRank.toLocaleString()}/${(
+      history.length + 1
+    ).toLocaleString()}      
       **Daily Average** ${gain(subRate * 60 * 60 * 24, 0)}
       **Hourly Gains:** ${gain(hourlyGains)} (${gain(
       hourlyGainsComparedToLast
@@ -270,9 +281,6 @@ export async function updateTask() {
         ? ""
         : "⬇️"
     }
-      **Minutely Gains:** ${gain(subRate * 60, 1)}
-      **Secondly Gains:** ${gain(subRate, 2)}
-      **Subscribers Gained Today:** ${gain(gainedToday)}
       **Subscribers Gained in Last 24 Hours:** ${gain(
         niaData.estSubCount - firstCountInLast24Hours.subscribers
       )}
@@ -282,21 +290,19 @@ export async function updateTask() {
     `),
     fields: [
       {
-        name: "Hourly Gains, Last 12 Hours",
+        name: "Hourly Gains, Last 6 Hours",
         value: history
-          .slice(-12)
+          .slice(-6)
           .map((d, i) => {
             const rate = rates.find(
               (r) =>
                 (r.min ?? 0) <= d.gained && (r.max ? r.max >= d.gained : true)
             );
-            return `* ${i === 11 ? "**" : ""}${formatEasternTime(
+            return `* ${i === 5 ? "**" : ""}${formatEasternTime(
               new Date(d.date)
-            )}${
-              i === 11 ? "**" : ""
-            }: ${d.subscribers.toLocaleString()} (${gain(d.gained)}) ${
-              rate && rate.emoji ? rate.emoji : ""
-            }`;
+            )}${i === 5 ? "**" : ""}: ${d.subscribers.toLocaleString()} (${gain(
+              d.gained
+            )}) ${rate && rate.emoji ? rate.emoji : ""}`;
           })
           .join("\n"),
       },
@@ -314,10 +320,10 @@ export async function updateTask() {
           .join("\n"),
       },
       {
-        name: "Top 10 Highest Hourly Gains",
+        name: "Top 5 Hours with Highest Gains",
         value: history
           .toSorted((a, b) => b.gained - a.gained)
-          .slice(0, 10)
+          .slice(0, 5)
           .map((d, index) => {
             const date = getDateInEasternTime(new Date(d.date));
             const isCurrentHour =
