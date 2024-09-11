@@ -264,8 +264,9 @@ export async function updateTask() {
   );
 
   const embedObject: Required<WebhookData>["embeds"][number] = {
-    title: `${rate && rate.emoji ? `${rate.emoji} ` : ""}
-    Current Subscribers: ${niaData.estSubCount.toLocaleString()}`,
+    title: `${
+      rate && rate.emoji ? `${rate.emoji} ` : ""
+    } Current Subscribers: ${niaData.estSubCount.toLocaleString()}`,
     description: trim(`
       **Ranking vs Last 24 Hours:** ${last24HoursRank}/24
       **Ranking vs All Time:** ${allTimeRank.toLocaleString()}/${(
