@@ -291,19 +291,21 @@ export async function updateTask() {
     `),
     fields: [
       {
-        name: "Hourly Gains, Last 6 Hours",
+        name: "Hourly Gains, Last 12 Hours",
         value: history
-          .slice(-6)
+          .slice(-12)
           .map((d, i) => {
             const rate = rates.find(
               (r) =>
                 (r.min ?? 0) <= d.gained && (r.max ? r.max >= d.gained : true)
             );
-            return `* ${i === 5 ? "**" : ""}${formatEasternTime(
+            return `* ${i === 11 ? "**" : ""}${formatEasternTime(
               new Date(d.date)
-            )}${i === 5 ? "**" : ""}: ${d.subscribers.toLocaleString()} (${gain(
-              d.gained
-            )}) ${rate && rate.emoji ? rate.emoji : ""}`;
+            )}${
+              i === 11 ? "**" : ""
+            }: ${d.subscribers.toLocaleString()} (${gain(d.gained)}) ${
+              rate && rate.emoji ? rate.emoji : ""
+            }`;
           })
           .join("\n"),
       },
@@ -321,10 +323,10 @@ export async function updateTask() {
           .join("\n"),
       },
       {
-        name: "Top 5 Hours with Highest Gains",
+        name: "Top 10 Hours with Highest Gains",
         value: history
           .toSorted((a, b) => b.gained - a.gained)
-          .slice(0, 5)
+          .slice(0, 10)
           .map((d, index) => {
             const date = getDateInEasternTime(new Date(d.date));
             const isCurrentHour =
