@@ -9,15 +9,15 @@ import fs from "fs";
 Chart.register(...registerables);
 GlobalFonts.registerFromPath(
   join(process.cwd(), "fonts/Poppins-Medium.ttf"),
-  "PoppinsMedium"
+  "PoppinsMedium",
 );
 GlobalFonts.registerFromPath(
   join(process.cwd(), "fonts/Poppins-ExtraBold.ttf"),
-  "PoppinsExtraBold"
+  "PoppinsExtraBold",
 );
 GlobalFonts.registerFromPath(
   join(process.cwd(), "fonts/Poppins-SemiBold.ttf"),
-  "PoppinsSemiBold"
+  "PoppinsSemiBold",
 );
 
 interface CommunitricsData {
@@ -49,14 +49,14 @@ interface WebhookData {
 
 const gain = (gain: number, precision: number = 0) =>
   `${gain > 0 ? "+" : ""}${parseFloat(
-    gain.toFixed(precision)
+    gain.toFixed(precision),
   ).toLocaleString()}`;
 
 function formatEasternTime(
   date: Date,
   hasTime = true,
   timeSeparator = " ",
-  fullTime = false
+  fullTime = false,
 ) {
   const datePart = new Intl.DateTimeFormat("en-US", {
     month: "short",
@@ -80,7 +80,7 @@ function getDateInEasternTime(date: Date) {
   return new Date(
     date.toLocaleString("en-US", {
       timeZone: "America/New_York",
-    })
+    }),
   );
 }
 
@@ -182,7 +182,7 @@ export async function updateTask() {
   let response, communitricsData, estSubCount;
   try {
     response = await fetch(
-      "https://api.communitrics.com/UCX6OQ3DkcsbYNE6H8uQQuVA"
+      "https://api.communitrics.com/UCX6OQ3DkcsbYNE6H8uQQuVA",
     );
     communitricsData = (await response.json()) as CommunitricsData;
     estSubCount = communitricsData.channelDetails.linearEstSubscriberCount;
@@ -191,9 +191,8 @@ export async function updateTask() {
     return;
   }
 
-  const timeTook = currentDate.getTime() - lastStats.mrbeast.update;
-  const subRate =
-    (estSubCount - lastStats.mrbeast.subscribers) / (timeTook / 1000);
+  const timeTook = currentDate.getTime() - lastStats.update;
+  const subRate = (estSubCount - lastStats.subscribers) / (timeTook / 1000);
 
   const lastHour = history[history.length - 1];
   const hourlyGains = estSubCount - lastHour.subscribers;
@@ -245,7 +244,7 @@ export async function updateTask() {
         acc[formattedDate].subscribers = data.subscribers;
 
         return acc;
-      }, {} as any)
+      }, {} as any),
     ) as {
       date: number;
       subscribers: number;
@@ -259,7 +258,7 @@ export async function updateTask() {
   });
 
   const rate = rates.find(
-    (r) => (r.min ?? 0) <= hourlyGains && (r.max ? r.max >= hourlyGains : true)
+    (r) => (r.min ?? 0) <= hourlyGains && (r.max ? r.max >= hourlyGains : true),
   );
 
   const embedObject: Required<WebhookData>["embeds"][number] = {
@@ -269,23 +268,23 @@ export async function updateTask() {
     description: trim(`
       **Ranking vs Last 24 Hours:** ${last24HoursRank}/24
       **Ranking vs All Time:** ${allTimeRank.toLocaleString()}/${(
-      history.length + 1
-    ).toLocaleString()}      
+        history.length + 1
+      ).toLocaleString()}      
       **Daily Average** ${gain(subRate * 60 * 60 * 24, 0)}
       **Hourly Gains:** ${gain(hourlyGains)} (${gain(
-      hourlyGainsComparedToLast
-    )}) ${
-      hourlyGainsComparedToLast > 0
-        ? "⬆️"
-        : hourlyGainsComparedToLast === 0
-        ? ""
-        : "⬇️"
-    }
+        hourlyGainsComparedToLast,
+      )}) ${
+        hourlyGainsComparedToLast > 0
+          ? "⬆️"
+          : hourlyGainsComparedToLast === 0
+            ? ""
+            : "⬇️"
+      }
       **Subscribers Gained in Last 24 Hours:** ${gain(
-        estSubCount - firstCountInLast24Hours.subscribers
+        estSubCount - firstCountInLast24Hours.subscribers,
       )}
       **Subscribers Gained Since Release:** ${gain(
-        estSubCount - firstData.subscribers
+        estSubCount - firstData.subscribers,
       )}
     `),
     fields: [
@@ -296,10 +295,10 @@ export async function updateTask() {
           .map((d, i) => {
             const rate = rates.find(
               (r) =>
-                (r.min ?? 0) <= d.gained && (r.max ? r.max >= d.gained : true)
+                (r.min ?? 0) <= d.gained && (r.max ? r.max >= d.gained : true),
             );
             return `* ${i === 11 ? "**" : ""}${formatEasternTime(
-              new Date(d.date)
+              new Date(d.date),
             )}${
               i === 11 ? "**" : ""
             }: ${d.subscribers.toLocaleString()} (${gain(d.gained)}) ${
@@ -351,7 +350,7 @@ export async function updateTask() {
     "Subscriber History Since Release",
     history.map((d) => getDateInEasternTime(new Date(d.date))),
     history.map((d) => d.subscribers),
-    255000000
+    255000000,
   );
 
   const hourlyGainsGraph = await createGraph(
@@ -361,15 +360,13 @@ export async function updateTask() {
       .map((d) => new Date(getDateInEasternTime(new Date(d.date)))),
     history.slice(-24).map((d) => d.gained),
     undefined,
-    true
+    true,
   );
 
   fs.writeFileSync("subscriber_history.png", subscriberHistoryGraph);
   fs.writeFileSync("hourly_gains.png", hourlyGainsGraph);
 
-  updateStats({
-    mrbeastSubscribers: estSubCount,
-  });
+  updateStats(estSubCount);
   save();
 
   const formData = new FormData();
@@ -388,12 +385,12 @@ export async function updateTask() {
         },
       ],
       embeds: [embedObject],
-    })
+    }),
   );
   formData.append(
     "files[0]",
     new Blob([subscriberHistoryGraph]),
-    "subscriber_history.png"
+    "subscriber_history.png",
   );
   formData.append("files[1]", new Blob([hourlyGainsGraph]), "hourly_gains.png");
 
@@ -408,7 +405,7 @@ async function createGraph(
   dates: Date[],
   subscriberHistory: number[],
   startValue?: number,
-  isHourlyGainsGraph = false
+  isHourlyGainsGraph = false,
 ) {
   const canvas = createCanvas(1200, 800);
   const ctx = canvas.getContext("2d");
@@ -432,7 +429,7 @@ async function createGraph(
       ],
     },
     startValue,
-    isHourlyGainsGraph
+    isHourlyGainsGraph,
   );
 
   const chart = new Chart(ctx as any, chartConfig);

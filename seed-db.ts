@@ -1,4 +1,5 @@
 import { exists } from "node:fs/promises";
+import type { Database } from "./src/utils/db";
 
 async function main() {
   const csvFile = Bun.file("./MrBeast_Subscribers.csv");
@@ -68,14 +69,13 @@ async function main() {
       JSON.stringify({
         lastUpdate: hourlyData[hourlyData.length - 1].date,
         subscribers: lastSubscribers,
-        hourlyGains: hourlySubscribersGained,
         history: hourlyData,
-      })
+      } satisfies Database),
     );
   }
 
   const dbFile = Bun.file("./db.json");
-  const db = await dbFile.json();
+  const db = (await dbFile.json()) as Database;
   db.lastUpdate = hourlyData[hourlyData.length - 1].date;
   db.subscribers = lastSubscribers;
   db.history = hourlyData;

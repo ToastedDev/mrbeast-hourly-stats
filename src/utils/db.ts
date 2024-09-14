@@ -1,10 +1,8 @@
 import { exists } from "node:fs/promises";
 
-interface Database {
-  mrbeastData: {
-    lastUpdate: number;
-    subscribers: number;
-  };
+export interface Database {
+  lastUpdate: number;
+  subscribers: number;
   history: {
     date: number;
     subscribers: number;
@@ -17,12 +15,10 @@ async function initDatabase() {
     await Bun.write(
       "./db.json",
       JSON.stringify({
-        mrbeastData: {
-          lastUpdate: 0,
-          subscribers: 0,
-        },
+        lastUpdate: 0,
+        subscribers: 0,
         history: [],
-      } satisfies Database)
+      } satisfies Database),
     );
   }
 }
@@ -35,7 +31,8 @@ let db: Database = await dbFile.json();
 function updateDb() {
   const data = db as any;
   db = {
-    mrbeastData: data.mrbeastData,
+    lastUpdate: data.lastUpdate,
+    subscribers: data.subscribers,
     history: data.history,
   };
   save();
@@ -45,22 +42,20 @@ updateDb();
 
 export function getLastStats() {
   return {
-    mrbeast: {
-      update: db.mrbeastData.lastUpdate,
-      subscribers: db.mrbeastData.subscribers,
-    },
+    update: db.lastUpdate,
+    subscribers: db.subscribers,
   };
 }
 
-export function updateStats(data: { mrbeastSubscribers: number }) {
-  db.mrbeastData.lastUpdate = new Date().getTime();
+export function updateStats(mrbeastSubscribers: number) {
+  db.lastUpdate = new Date().getTime();
 
-  const mrbeastGained = data.mrbeastSubscribers - db.mrbeastData.subscribers;
-  db.mrbeastData.subscribers = data.mrbeastSubscribers;
+  const mrbeastGained = mrbeastSubscribers - db.subscribers;
+  db.subscribers = mrbeastSubscribers;
 
   db.history.push({
     date: new Date().getTime(),
-    subscribers: data.mrbeastSubscribers,
+    subscribers: mrbeastSubscribers,
     gained: mrbeastGained,
   });
 }
