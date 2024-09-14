@@ -15,14 +15,15 @@ GlobalFonts.registerFromPath(
   join(process.cwd(), "fonts/Poppins-ExtraBold.ttf"),
   "PoppinsExtraBold"
 );
-
 GlobalFonts.registerFromPath(
   join(process.cwd(), "fonts/Poppins-SemiBold.ttf"),
   "PoppinsSemiBold"
 );
 
-interface NiaData {
-  estSubCount: number;
+interface CommunitricsData {
+  channelDetails: {
+    linearEstSubscriberCount: number;
+  };
 }
 
 interface WebhookData {
@@ -178,26 +179,24 @@ export async function updateTask() {
   const currentDate = new Date();
   const currentDateAsEastern = getDateInEasternTime(currentDate);
 
-  let response, niaData;
+  let response, communitricsData, estSubCount;
   try {
     response = await fetch(
-      "https://nia-statistics.com/api/get?platform=youtube&type=channel&id=UCX6OQ3DkcsbYNE6H8uQQuVA"
+      "https://api.communitrics.com/UCX6OQ3DkcsbYNE6H8uQQuVA"
     );
-    const fallbackData = await response.json();
-    niaData = {
-      estSubCount: fallbackData.estSubCount,
-    };
+    communitricsData = (await response.json()) as CommunitricsData;
+    estSubCount = communitricsData.channelDetails.linearEstSubscriberCount;
   } catch (error) {
-    console.error("Fetch error from nia-statistics API:", error);
+    console.error("Fetch error from Communitrics API:", error);
     return;
   }
 
   const timeTook = currentDate.getTime() - lastStats.mrbeast.update;
   const subRate =
-    (niaData.estSubCount - lastStats.mrbeast.subscribers) / (timeTook / 1000);
+    (estSubCount - lastStats.mrbeast.subscribers) / (timeTook / 1000);
 
   const lastHour = history[history.length - 1];
-  const hourlyGains = niaData.estSubCount - lastHour.subscribers;
+  const hourlyGains = estSubCount - lastHour.subscribers;
   const hourlyGainsComparedToLast = hourlyGains - lastHour.gained;
   const firstCountInLast24Hours = history.slice(-24)[0];
   const last24HoursRank =
@@ -206,7 +205,7 @@ export async function updateTask() {
       {
         current: true,
         date: currentDate.getTime(),
-        subscribers: niaData.estSubCount,
+        subscribers: estSubCount,
         gained: hourlyGains,
       },
     ]
@@ -217,7 +216,7 @@ export async function updateTask() {
     history
       .concat({
         date: currentDate.getTime(),
-        subscribers: niaData.estSubCount,
+        subscribers: estSubCount,
         gained: hourlyGains,
       })
       .sort((a, b) => b.gained - a.gained)
@@ -225,7 +224,7 @@ export async function updateTask() {
 
   history.push({
     date: new Date().getTime(),
-    subscribers: niaData.estSubCount,
+    subscribers: estSubCount,
     gained: hourlyGains,
   });
 
@@ -266,7 +265,7 @@ export async function updateTask() {
   const embedObject: Required<WebhookData>["embeds"][number] = {
     title: `${
       rate && rate.emoji ? `${rate.emoji} ` : ""
-    } Current Subscribers: ${niaData.estSubCount.toLocaleString()}`,
+    } Current Subscribers: ${estSubCount.toLocaleString()}`,
     description: trim(`
       **Ranking vs Last 24 Hours:** ${last24HoursRank}/24
       **Ranking vs All Time:** ${allTimeRank.toLocaleString()}/${(
@@ -283,10 +282,10 @@ export async function updateTask() {
         : "⬇️"
     }
       **Subscribers Gained in Last 24 Hours:** ${gain(
-        niaData.estSubCount - firstCountInLast24Hours.subscribers
+        estSubCount - firstCountInLast24Hours.subscribers
       )}
       **Subscribers Gained Since Release:** ${gain(
-        niaData.estSubCount - firstData.subscribers
+        estSubCount - firstData.subscribers
       )}
     `),
     fields: [
@@ -369,7 +368,7 @@ export async function updateTask() {
   fs.writeFileSync("hourly_gains.png", hourlyGainsGraph);
 
   updateStats({
-    mrbeastSubscribers: niaData.estSubCount,
+    mrbeastSubscribers: estSubCount,
   });
   save();
 
