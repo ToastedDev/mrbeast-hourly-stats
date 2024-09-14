@@ -34,7 +34,6 @@ let db: Database = await dbFile.json();
 
 function updateDb() {
   const data = db as any;
-  delete data.mrbeastData.hourlyGains;
   db = {
     mrbeastData: data.mrbeastData,
     history: data.history,
