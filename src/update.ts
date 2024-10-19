@@ -377,8 +377,7 @@ export async function updateTask() {
       .slice(-168)
       .map((d) => new Date(getDateInEasternTime(new Date(d.date)))),
     history.slice(-168).map((d) => d.subscribers),
-    undefined,
-    true
+    undefined
   );
 
   const monthlyGainsGraph = await createGraph(

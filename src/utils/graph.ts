@@ -62,7 +62,7 @@ export const graphConfiguration = (
           font: { size: 14, weight: "normal", family: "PoppinsMedium" },
           color: "#555555",
           autoSkip: true,
-          maxTicksLimit: isHourlyGainsGraph ? 12 : 8,
+          maxTicksLimit: isHourlyGainsGraph ? 10 : 10,
           padding: 10,
         },
         grid: { color: "#e0e0e0" },
