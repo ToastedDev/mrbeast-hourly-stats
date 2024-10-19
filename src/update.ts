@@ -354,7 +354,7 @@ export async function updateTask() {
     color: hexToDecimalColor(rate?.color ?? "#ffffff"),
   };
 
-  const subscriberHistoryGraph = await createGraph(
+  const subHistoryGraph = await createGraph(
     "Subscriber History Since Release",
     history.map((d) => getDateInEasternTime(new Date(d.date))),
     history.map((d) => d.subscribers),
@@ -371,6 +371,27 @@ export async function updateTask() {
     true
   );
 
+  const dailyGainsGraph = await createGraph(
+  "Subscriber History (Last 7 Days)",
+    history
+      .slice(-168)
+      .map((d) => new Date(getDateInEasternTime(new Date(d.date)))),
+    history.slice(-168).map((d) => d.subscribers),
+    undefined,
+    true
+  );
+
+  const monthlyGainsGraph = await createGraph(
+  "Subscriber History (Last 30 Days)",
+    history
+      .slice(-720)
+      .map((d) => new Date(getDateInEasternTime(new Date(d.date)))),
+    history.slice(-720).map((d) => d.subscribers),
+    undefined,
+    true
+  );
+
+
   updateStats(estSubCount);
   save();
 
@@ -382,22 +403,28 @@ export async function updateTask() {
       attachments: [
         {
           id: 0,
-          filename: "subscriber_history.png",
+          filename: "sub_history.png",
         },
         {
           id: 1,
           filename: "hourly_gains.png",
         },
+        {
+          id: 2,
+          filename: "daily_gains.png",
+        },
+        {
+          id: 3,
+          filename: "monthly_gains.png",
+        }
       ],
       embeds: [embedObject],
     })
   );
-  formData.append(
-    "files[0]",
-    new Blob([subscriberHistoryGraph]),
-    "subscriber_history.png"
-  );
+  formData.append("files[0]", new Blob([subHistoryGraph]), "sub_history.png");
   formData.append("files[1]", new Blob([hourlyGainsGraph]), "hourly_gains.png");
+  formData.append("files[2]", new Blob([dailyGainsGraph]), "daily_gains.png");
+  formData.append("files[3]", new Blob([monthlyGainsGraph]), "monthly_gains.png");
 
   await fetch(process.env.DISCORD_WEBHOOK_URL!, {
     method: "POST",
