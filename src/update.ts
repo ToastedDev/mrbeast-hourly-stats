@@ -387,8 +387,7 @@ export async function updateTask() {
       .slice(-720)
       .map((d) => new Date(getDateInEasternTime(new Date(d.date)))),
     history.slice(-720).map((d) => d.subscribers),
-    undefined,
-    true
+    undefined
   );
 
 
