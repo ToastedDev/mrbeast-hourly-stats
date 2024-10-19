@@ -63,25 +63,31 @@ function formatEasternTime(
     day: "2-digit",
     timeZone: "America/New_York",
   }).format(date);
+
   let timePart = new Intl.DateTimeFormat("en-US", {
     hour: fullTime ? "2-digit" : "numeric",
     minute: fullTime ? "2-digit" : undefined,
     second: fullTime ? "2-digit" : undefined,
     hour12: true,
-    timeZone: "America/New_York",
+    timeZone: "America/New_York", 
   }).format(date);
 
   timePart = timePart.replace(" AM", "am").replace(" PM", "pm");
-
   return `${datePart}${hasTime ? `,${timeSeparator}${timePart}` : ""}`;
 }
 
 function getDateInEasternTime(date: Date) {
-  return new Date(
-    date.toLocaleString("en-US", {
-      timeZone: "America/New_York",
-    })
-  );
+  const utcYear = date.getUTCFullYear();
+  const utcMonth = date.getUTCMonth(); 
+  const utcDate = date.getUTCDate();
+  const utcHours = date.getUTCHours();
+  const utcMinutes = date.getUTCMinutes();
+  const utcSeconds = date.getUTCSeconds();
+
+  const utcDateObject = new Date(Date.UTC(utcYear, utcMonth, utcDate, utcHours, utcMinutes, utcSeconds));
+  return new Date(utcDateObject.toLocaleString("en-US", {
+    timeZone: "America/New_York"
+  }));
 }
 
 const trim = (str: string) =>
@@ -364,9 +370,6 @@ export async function updateTask() {
     undefined,
     true
   );
-
-  fs.writeFileSync("subscriber_history.png", subscriberHistoryGraph);
-  fs.writeFileSync("hourly_gains.png", hourlyGainsGraph);
 
   updateStats(estSubCount);
   save();

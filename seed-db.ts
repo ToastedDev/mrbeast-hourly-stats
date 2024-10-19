@@ -61,8 +61,6 @@ async function main() {
     }
   });
 
-  hourlyData.pop();
-
   if (!(await exists("./db.json"))) {
     return await Bun.write(
       "./db.json",
