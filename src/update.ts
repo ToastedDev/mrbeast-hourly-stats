@@ -4,7 +4,7 @@ import { createCanvas, GlobalFonts } from "@napi-rs/canvas";
 import "chartjs-adapter-date-fns";
 import { graphConfiguration } from "./utils/graph";
 import { join } from "node:path";
-import fs from "fs";
+import { DateTime } from "luxon";
 
 Chart.register(...registerables);
 GlobalFonts.registerFromPath(
@@ -58,36 +58,17 @@ function formatEasternTime(
   timeSeparator = " ",
   fullTime = false
 ) {
-  const datePart = new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "2-digit",
-    timeZone: "America/New_York",
-  }).format(date);
-
-  let timePart = new Intl.DateTimeFormat("en-US", {
-    hour: fullTime ? "2-digit" : "numeric",
-    minute: fullTime ? "2-digit" : undefined,
-    second: fullTime ? "2-digit" : undefined,
-    hour12: true,
-    timeZone: "America/New_York", 
-  }).format(date);
-
-  timePart = timePart.replace(" AM", "am").replace(" PM", "pm");
-  return `${datePart}${hasTime ? `,${timeSeparator}${timePart}` : ""}`;
+  return DateTime.fromJSDate(date)
+    .setZone("America/New_York")
+    .toFormat(
+      `MMM dd${hasTime ? `,${timeSeparator}h${fullTime ? ":m" : ""} a` : ""}`
+    )
+    .replace(" AM", " am")
+    .replace(" PM", " pm");
 }
 
 function getDateInEasternTime(date: Date) {
-  const utcYear = date.getUTCFullYear();
-  const utcMonth = date.getUTCMonth(); 
-  const utcDate = date.getUTCDate();
-  const utcHours = date.getUTCHours();
-  const utcMinutes = date.getUTCMinutes();
-  const utcSeconds = date.getUTCSeconds();
-
-  const utcDateObject = new Date(Date.UTC(utcYear, utcMonth, utcDate, utcHours, utcMinutes, utcSeconds));
-  return new Date(utcDateObject.toLocaleString("en-US", {
-    timeZone: "America/New_York"
-  }));
+  return DateTime.fromJSDate(date).setZone("America/New_York").toJSDate();
 }
 
 const trim = (str: string) =>
@@ -237,12 +218,11 @@ export async function updateTask() {
     Object.values(
       history.reduce((acc, data) => {
         const date = getDateInEasternTime(new Date(data.date));
-        if (date.getHours() === 0) date.setDate(date.getDate() - 1);
         const formattedDate = formatEasternTime(date, false);
 
         if (!acc[formattedDate]) {
           acc[formattedDate] = {
-            date: getDateInEasternTime(new Date(data.date)).getTime(),
+            date: date.getTime(),
             subscribers: data.subscribers,
           };
         }
@@ -262,6 +242,31 @@ export async function updateTask() {
       gained: d.subscribers - (last ? last.subscribers : 0),
     };
   });
+
+  const gainedLast7Days = Object.entries<{
+    date: number;
+    history: [Date, number][];
+  }>(
+    history.reduce((acc, data) => {
+      const date = getDateInEasternTime(new Date(data.date));
+      const formattedDate = formatEasternTime(date, false);
+
+      if (!acc[formattedDate]) {
+        acc[formattedDate] = {
+          date: new Date(data.date).getTime(),
+          history: [[date, data.gained]],
+        };
+      }
+
+      acc[formattedDate]?.history.push([date, data.gained]);
+
+      return acc;
+    }, {} as any)
+  )
+    .slice(-7)
+    .map(([key, value]) => {
+      return value.history;
+    });
 
   const rate = rates.find(
     (r) => (r.min ?? 0) <= hourlyGains && (r.max ? r.max >= hourlyGains : true)
@@ -319,7 +324,6 @@ export async function updateTask() {
           .slice(-7)
           .map((d, i) => {
             const dt = new Date(d.date);
-            dt.setDate(dt.getDate() + 1);
             return `* ${i === 6 ? "**" : ""}${formatEasternTime(dt, false)}${
               i === 6 ? "**" : ""
             }: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`;
@@ -372,23 +376,22 @@ export async function updateTask() {
   );
 
   const dailyGainsGraph = await createGraph(
-  "Subscriber History (Last 7 Days)",
+    "Subscriber History (Last 7 Days)",
     history
       .slice(-168)
       .map((d) => new Date(getDateInEasternTime(new Date(d.date)))),
-    history.slice(-168).map((d) => d.subscribers),
-    undefined
+    history.slice(-168).map((d) => d.subscribers)
   );
 
   const monthlyGainsGraph = await createGraph(
-  "Subscriber History (Last 30 Days)",
+    "Subscriber History (Last 30 Days)",
     history
       .slice(-720)
       .map((d) => new Date(getDateInEasternTime(new Date(d.date)))),
-    history.slice(-720).map((d) => d.subscribers),
-    undefined
+    history.slice(-720).map((d) => d.subscribers)
   );
 
+  const last7DaysGraph = await createLast7DaysGraph(gainedLast7Days);
 
   updateStats(estSubCount);
   save();
@@ -414,7 +417,11 @@ export async function updateTask() {
         {
           id: 3,
           filename: "monthly_gains.png",
-        }
+        },
+        {
+          id: 4,
+          filename: "last_7_days.png",
+        },
       ],
       embeds: [embedObject],
     })
@@ -422,7 +429,12 @@ export async function updateTask() {
   formData.append("files[0]", new Blob([subHistoryGraph]), "sub_history.png");
   formData.append("files[1]", new Blob([hourlyGainsGraph]), "hourly_gains.png");
   formData.append("files[2]", new Blob([dailyGainsGraph]), "daily_gains.png");
-  formData.append("files[3]", new Blob([monthlyGainsGraph]), "monthly_gains.png");
+  formData.append(
+    "files[3]",
+    new Blob([monthlyGainsGraph]),
+    "monthly_gains.png"
+  );
+  formData.append("files[4]", new Blob([last7DaysGraph]), "last_7_days.png");
 
   await fetch(process.env.DISCORD_WEBHOOK_URL!, {
     method: "POST",
@@ -460,6 +472,55 @@ async function createGraph(
     },
     startValue,
     isHourlyGainsGraph
+  );
+
+  const chart = new Chart(ctx as any, chartConfig);
+
+  chart.draw();
+
+  return canvas.encode("png");
+}
+
+const colors = [
+  "#2DD4FF40",
+  "#2DD4FF50",
+  "#2DD4FF60",
+  "#2DD4FF70",
+  "#2DD4FF80",
+  "#2DD4FF90",
+  "#0026FF",
+];
+
+async function createLast7DaysGraph(history: [Date, number][][]) {
+  const canvas = createCanvas(1200, 800);
+  const ctx = canvas.getContext("2d");
+
+  const currentDate = new Date();
+  const formattedDate = formatEasternTime(currentDate, false);
+
+  const chartConfig = graphConfiguration(
+    "Past 7 Days Hourly Gains Comparison",
+    {
+      labels: history[0].map(([d]) => new Date(getDateInEasternTime(d))),
+      datasets: history.map((day, i) => {
+        const currentDay = day[0][0];
+        return {
+          label:
+            formatEasternTime(currentDay, false) +
+            (formatEasternTime(currentDay, false) === formattedDate
+              ? `, as of ${formatEasternTime(currentDate, true).split(", ")[1]}`
+              : ""),
+          data: day.map(([, gain]) => gain),
+          borderColor: colors[i],
+          borderWidth: 4,
+          tension: 0.3,
+          pointRadius: 0,
+        };
+      }),
+    },
+    0,
+    false,
+    true
   );
 
   const chart = new Chart(ctx as any, chartConfig);

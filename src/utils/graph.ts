@@ -5,6 +5,7 @@ import {
   type Plugin,
 } from "chart.js";
 import { enUS } from "date-fns/locale";
+import { DateTime } from "luxon";
 
 Chart.defaults.font.family = "PoppinsSemiBold";
 
@@ -32,7 +33,8 @@ export const graphConfiguration = (
   title: string,
   data: ChartData,
   startValue?: number,
-  isHourlyGainsGraph = false
+  isHourlyGainsGraph = false,
+  isLast7Days = false
 ): ChartConfiguration => ({
   type: "line",
   data,
@@ -51,7 +53,7 @@ export const graphConfiguration = (
         },
       },
       legend: {
-        display: false,
+        display: isLast7Days,
       },
     },
     scales: {
@@ -70,10 +72,11 @@ export const graphConfiguration = (
       x: {
         type: "time",
         time: {
-          unit: isHourlyGainsGraph ? "hour" : "day",
-          tooltipFormat: isHourlyGainsGraph
-            ? "MMM dd, yyyy HH:mm"
-            : "MMM dd, yyyy",
+          unit: isHourlyGainsGraph || isLast7Days ? "hour" : "day",
+          tooltipFormat:
+            isHourlyGainsGraph || isLast7Days
+              ? "MMM dd, yyyy HH:mm"
+              : "MMM dd, yyyy",
           displayFormats: {
             hour: "HH:mm",
             day: "MMM dd, yyyy",
@@ -88,19 +91,24 @@ export const graphConfiguration = (
           font: { size: 14, weight: "normal", family: "PoppinsMedium" },
           color: "#555555",
           autoSkip: true,
-          maxTicksLimit: isHourlyGainsGraph ? 10 : 10,
+          maxTicksLimit: 10,
           padding: 10,
-          callback: function (val, index, ticks) {
-            if (isHourlyGainsGraph) {
-              return new Date(val).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              });
+          callback: (val) => {
+            if (isHourlyGainsGraph || isLast7Days) {
+              return DateTime.fromJSDate(new Date(val))
+                .setZone("America/New_York")
+                .toLocaleString({
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  timeZone: "America/New_York",
+                });
             } else {
-              return new Date(val).toLocaleDateString([], {
-                month: "short",
-                day: "numeric",
-              });
+              return DateTime.fromJSDate(new Date(val))
+                .setZone("America/New_York")
+                .toLocaleString({
+                  month: "short",
+                  day: "numeric",
+                });
             }
           },
         },
@@ -108,13 +116,15 @@ export const graphConfiguration = (
       },
     },
     elements: {
-      line: {
-        borderWidth: 4,
-        tension: 0.3,
-        borderColor: "#2DD4FF",
-        backgroundColor: "rgba(45, 212, 255, 0.2)",
-        fill: true,
-      },
+      line: !isLast7Days
+        ? {
+            borderWidth: 4,
+            tension: 0.3,
+            borderColor: "#2DD4FF",
+            backgroundColor: "rgba(45, 212, 255, 0.2)",
+            fill: true,
+          }
+        : undefined,
       point: {
         radius: 0,
         hoverRadius: 7,
