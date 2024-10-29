@@ -444,7 +444,8 @@ await Promise.all(
       body: formData,
     })
   )
-);
+); 
+} 
 
 async function createGraph(
   title: string,
@@ -516,7 +517,7 @@ async function createLast7DaysGraph(history: [Date, number][][]) {
               : ""),
           data: day.map(([, gain]) => gain),
           borderColor: colors[i],
-          borderWidth: i === 6 ? 4 : 2,  
+          borderWidth: i === 6 ? 4 : 2,
           tension: 0.3,
           pointRadius: 0,
         };
@@ -532,5 +533,4 @@ async function createLast7DaysGraph(history: [Date, number][][]) {
   chart.draw();
 
   return canvas.encode("png");
-}
 }
