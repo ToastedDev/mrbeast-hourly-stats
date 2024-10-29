@@ -63,8 +63,8 @@ function formatEasternTime(
     .toFormat(
       `MMM dd${hasTime ? `,${timeSeparator}h${fullTime ? ":m" : ""} a` : ""}`
     )
-    .replace(" AM", " am")
-    .replace(" PM", " pm");
+    .replace(" AM", "am")
+    .replace(" PM", "pm");
 }
 
 function getDateInEasternTime(date: Date) {
