@@ -429,18 +429,22 @@ export async function updateTask() {
   formData.append("files[0]", new Blob([subHistoryGraph]), "sub_history.png");
   formData.append("files[1]", new Blob([hourlyGainsGraph]), "hourly_gains.png");
   formData.append("files[2]", new Blob([dailyGainsGraph]), "daily_gains.png");
-  formData.append(
-    "files[3]",
-    new Blob([monthlyGainsGraph]),
-    "monthly_gains.png"
-  );
+  formData.append("files[3]", new Blob([monthlyGainsGraph]), "monthly_gains.png");
   formData.append("files[4]", new Blob([last7DaysGraph]), "last_7_days.png");
 
-  await fetch(process.env.DISCORD_WEBHOOK_URL!, {
-    method: "POST",
-    body: formData,
-  });
-}
+const webhookUrls = [
+  process.env.DISCORD_WEBHOOK_URL!,
+  process.env.SECOND_DISCORD_WEBHOOK_URL!
+];
+
+await Promise.all(
+  webhookUrls.map((url) =>
+    fetch(url, {
+      method: "POST",
+      body: formData,
+    })
+  )
+);
 
 async function createGraph(
   title: string,
@@ -482,13 +486,13 @@ async function createGraph(
 }
 
 const colors = [
-  "#2DD4FF40",
-  "#2DD4FF50",
-  "#2DD4FF60",
-  "#2DD4FF70",
-  "#2DD4FF80",
-  "#2DD4FF90",
-  "#0026FF",
+  "#b0e3f5",
+  "#9bd6eb", 
+  "#85c9e0",
+  "#6cb3d5", 
+  "#55a3d0", 
+  "#3f94cc", 
+  "#002d5b",
 ];
 
 async function createLast7DaysGraph(history: [Date, number][][]) {
@@ -512,7 +516,7 @@ async function createLast7DaysGraph(history: [Date, number][][]) {
               : ""),
           data: day.map(([, gain]) => gain),
           borderColor: colors[i],
-          borderWidth: 4,
+          borderWidth: i === 6 ? 4 : 2,  
           tension: 0.3,
           pointRadius: 0,
         };
@@ -528,4 +532,5 @@ async function createLast7DaysGraph(history: [Date, number][][]) {
   chart.draw();
 
   return canvas.encode("png");
+}
 }
