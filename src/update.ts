@@ -21,9 +21,7 @@ GlobalFonts.registerFromPath(
 );
 
 interface CommunitricsData {
-  channelDetails: {
-    linearEstSubscriberCount: number;
-  };
+    mrbeast: number;
 }
 
 interface WebhookData {
@@ -169,10 +167,10 @@ export async function updateTask() {
   let response, communitricsData, estSubCount;
   try {
     response = await fetch(
-      "https://api.communitrics.com/UCX6OQ3DkcsbYNE6H8uQQuVA"
+      "https://mrbeast.subscribercount.app/data"
     );
     communitricsData = (await response.json()) as CommunitricsData;
-    estSubCount = communitricsData.channelDetails.linearEstSubscriberCount;
+    estSubCount = communitricsData.mrbeast;
   } catch (error) {
     console.error("Fetch error from Communitrics API:", error);
     return;
