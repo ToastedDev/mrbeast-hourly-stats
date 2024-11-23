@@ -402,33 +402,33 @@ export async function updateTask() {
       attachments: [
         {
           id: 0,
-          filename: "sub_history.png",
+          filename: "sub_history.jpg",
         },
         {
           id: 1,
-          filename: "hourly_gains.png",
+          filename: "hourly_gains.jpg",
         },
         {
           id: 2,
-          filename: "daily_gains.png",
+          filename: "daily_gains.jpg",
         },
         {
           id: 3,
-          filename: "monthly_gains.png",
+          filename: "monthly_gains.jpg",
         },
         {
           id: 4,
-          filename: "last_7_days.png",
+          filename: "last_7_days.jpg",
         },
       ],
       embeds: [embedObject],
     })
   );
-  formData.append("files[0]", new Blob([subHistoryGraph]), "sub_history.png");
-  formData.append("files[1]", new Blob([hourlyGainsGraph]), "hourly_gains.png");
-  formData.append("files[2]", new Blob([dailyGainsGraph]), "daily_gains.png");
-  formData.append("files[3]", new Blob([monthlyGainsGraph]), "monthly_gains.png");
-  formData.append("files[4]", new Blob([last7DaysGraph]), "last_7_days.png");
+  formData.append("files[0]", new Blob([subHistoryGraph]), "sub_history.jpg");
+  formData.append("files[1]", new Blob([hourlyGainsGraph]), "hourly_gains.jpg");
+  formData.append("files[2]", new Blob([dailyGainsGraph]), "daily_gains.jpg");
+  formData.append("files[3]", new Blob([monthlyGainsGraph]), "monthly_gains.jpg");
+  formData.append("files[4]", new Blob([last7DaysGraph]), "last_7_days.jpg");
 
 const webhookUrls = [
   process.env.DISCORD_WEBHOOK_URL!,
@@ -481,7 +481,7 @@ async function createGraph(
 
   chart.draw();
 
-  return canvas.encode("png");
+  return canvas.encode("jpeg");
 }
 
 const colors = [
@@ -530,5 +530,5 @@ async function createLast7DaysGraph(history: [Date, number][][]) {
 
   chart.draw();
 
-  return canvas.encode("png");
+  return canvas.encode("jpeg");
 }
