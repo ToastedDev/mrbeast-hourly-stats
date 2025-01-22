@@ -21,7 +21,7 @@ GlobalFonts.registerFromPath(
 );
 
 interface CommunitricsData {
-    mrbeast: number;
+  mrbeast: number;
 }
 
 interface WebhookData {
@@ -168,6 +168,7 @@ export async function updateTask() {
   try {
     response = await fetch(
       "https://mrbeast.subscribercount.app/data"
+      // 'https://mb.toasted.dev/count'
     );
     communitricsData = (await response.json()) as CommunitricsData;
     estSubCount = communitricsData.mrbeast;
@@ -341,17 +342,17 @@ export async function updateTask() {
               date.getHours() === currentDateAsEastern.getHours();
             return `${index + 1}. ${
               isCurrentHour ? "**" : ""
-            }${formatEasternTime(new Date(d.date))}${
-              isCurrentHour ? "**" : ""
-            }: ${gain(d.gained)}`;
+            }${formatEasternTime(new Date(d.date), true).replace(
+              ", ",
+              ", yyyy, "
+            )}${isCurrentHour ? "**" : ""}: ${gain(d.gained)}`;
           })
           .join("\n"),
       },
     ],
     footer: {
-      text: "Made by @nottca for discord.gg/mrbeaststats",
-      icon_url:
-        "https://cdn.discordapp.com/icons/1175557946474766416/a_d8b4e1f2ceb5e91b655b3b623de12bd8.webp",
+      text: "Made by @nottca for discord.gg/mrbeastnews",
+      icon_url: "https://i.imgur.com/GcctO0B.png",
     },
     color: hexToDecimalColor(rate?.color ?? "#ffffff"),
   };
@@ -427,23 +428,28 @@ export async function updateTask() {
   formData.append("files[0]", new Blob([subHistoryGraph]), "sub_history.jpg");
   formData.append("files[1]", new Blob([hourlyGainsGraph]), "hourly_gains.jpg");
   formData.append("files[2]", new Blob([dailyGainsGraph]), "daily_gains.jpg");
-  formData.append("files[3]", new Blob([monthlyGainsGraph]), "monthly_gains.jpg");
+  formData.append(
+    "files[3]",
+    new Blob([monthlyGainsGraph]),
+    "monthly_gains.jpg"
+  );
   formData.append("files[4]", new Blob([last7DaysGraph]), "last_7_days.jpg");
 
-const webhookUrls = [
-  process.env.DISCORD_WEBHOOK_URL!,
-  process.env.SECOND_DISCORD_WEBHOOK_URL!
-];
+  const webhookUrls = [
+    process.env.DISCORD_WEBHOOK_URL!,
+    process.env.SECOND_DISCORD_WEBHOOK_URL!,
+    process.env.THIRD_DISCORD_WEBHOOK_URL!,
+  ];
 
-await Promise.all(
-  webhookUrls.map((url) =>
-    fetch(url, {
-      method: "POST",
-      body: formData,
-    })
-  )
-); 
-} 
+  await Promise.all(
+    webhookUrls.map((url) =>
+      fetch(url, {
+        method: "POST",
+        body: formData,
+      })
+    )
+  );
+}
 
 async function createGraph(
   title: string,
@@ -486,11 +492,11 @@ async function createGraph(
 
 const colors = [
   "#b0e3f5",
-  "#9bd6eb", 
+  "#9bd6eb",
   "#85c9e0",
-  "#6cb3d5", 
-  "#55a3d0", 
-  "#3f94cc", 
+  "#6cb3d5",
+  "#55a3d0",
+  "#3f94cc",
   "#002d5b",
 ];
 
