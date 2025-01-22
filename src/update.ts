@@ -54,17 +54,18 @@ function formatEasternTime(
   date: Date,
   hasTime = true,
   timeSeparator = " ",
-  fullTime = false
+  fullTime = false,
+  includeYear = false
 ) {
   return DateTime.fromJSDate(date)
     .setZone("America/New_York")
     .toFormat(
-      `MMM dd${hasTime ? `,${timeSeparator}h${fullTime ? ":m" : ""} a` : ""}`
+      `MMM dd${includeYear ? ', yyyy' : ''}${hasTime ? `,${timeSeparator}h${fullTime ? ":m" : ""} a` : ""}`
     )
     .replace(" AM", "am")
     .replace(" PM", "pm");
 }
-
+  
 function getDateInEasternTime(date: Date) {
   return DateTime.fromJSDate(date).setZone("America/New_York").toJSDate();
 }
@@ -342,10 +343,9 @@ export async function updateTask() {
               date.getHours() === currentDateAsEastern.getHours();
             return `${index + 1}. ${
               isCurrentHour ? "**" : ""
-            }${formatEasternTime(new Date(d.date), true).replace(
-              ", ",
-              ", yyyy, "
-            )}${isCurrentHour ? "**" : ""}: ${gain(d.gained)}`;
+            }${formatEasternTime(new Date(d.date), true, " ", false, true)}${
+              isCurrentHour ? "**" : ""
+            }: ${gain(d.gained)}`;
           })
           .join("\n"),
       },
