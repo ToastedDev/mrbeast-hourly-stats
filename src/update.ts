@@ -139,8 +139,14 @@ const rates: Rate[] = [
   },
   {
     min: 100000,
+    max: 199999,
     emoji: "<:SuperFire:1246879449962778624>",
     color: "#1bc6fa",
+  },
+  {
+    min: 200000,
+    emoji: "<:RainbowFire:1332699914257301535>",
+    color: "#ffff19"
   },
 ];
 
@@ -439,6 +445,7 @@ export async function updateTask() {
     process.env.DISCORD_WEBHOOK_URL!,
     process.env.SECOND_DISCORD_WEBHOOK_URL!,
     process.env.THIRD_DISCORD_WEBHOOK_URL!,
+    process.env.FOURTH_DISCORD_WEBHOOK_URL!,
   ];
 
   await Promise.all(
