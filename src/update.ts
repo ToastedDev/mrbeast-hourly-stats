@@ -190,6 +190,7 @@ export async function updateTask() {
   const lastHour = history[history.length - 1];
   const hourlyGains = estSubCount - lastHour.subscribers;
   const hourlyGainsComparedToLast = hourlyGains - lastHour.gained;
+  const firstCountIn2025 = 340665376;
   const firstCountInLast24Hours = history.slice(-24)[0];
   const last24HoursRank =
     [
@@ -303,6 +304,9 @@ export async function updateTask() {
       **Subscribers Gained Since Release:** ${gain(
         estSubCount - firstData.subscribers
       )}
+      **Subscribers Gained in 2025:** ${gain(
+        estSubCount - firstCountIn2025
+      )}
     `),
     fields: [
       {
@@ -344,14 +348,15 @@ export async function updateTask() {
           .map((d, index) => {
             const date = getDateInEasternTime(new Date(d.date));
             const isCurrentHour =
-              date.toISOString().split("T")[0] ===
-                currentDateAsEastern.toISOString().split("T")[0] &&
+              date.toISOString().split("T")[0] === currentDateAsEastern.toISOString().split("T")[0] &&
               date.getHours() === currentDateAsEastern.getHours();
-            return `${index + 1}. ${
-              isCurrentHour ? "**" : ""
-            }${formatEasternTime(new Date(d.date), true, " ", false, true)}${
-              isCurrentHour ? "**" : ""
-            }: ${gain(d.gained)}`;
+            return `${index + 1}. ${isCurrentHour ? "**" : ""}${formatEasternTime(
+              new Date(d.date),
+              true,
+              " ",
+              false,
+              true
+            )}${isCurrentHour ? "**" : ""}: ${gain(d.gained)}`;
           })
           .join("\n"),
       },
