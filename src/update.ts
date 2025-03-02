@@ -170,6 +170,7 @@ export async function updateTask() {
   const firstData = history[0];
   const currentDate = new Date();
   const currentDateAsEastern = getDateInEasternTime(currentDate);
+  const currentHour = currentDateAsEastern.getHours();
 
   let response, communitricsData, estSubCount;
   try {
@@ -279,12 +280,21 @@ export async function updateTask() {
     (r) => (r.min ?? 0) <= hourlyGains && (r.max ? r.max >= hourlyGains : true)
   );
 
+  const past7DaysHourlyGains = history
+    .slice(-168) 
+    .filter((d) => new Date(getDateInEasternTime(new Date(d.date))).getHours() === currentHour)
+    .map((d) => d.gained);
+
+  const sameHourRank =
+    [...past7DaysHourlyGains, hourlyGains].sort((a, b) => b - a).indexOf(hourlyGains) + 1;
+
   const embedObject: Required<WebhookData>["embeds"][number] = {
     title: `${
       rate && rate.emoji ? `${rate.emoji} ` : ""
     } Current Subscribers: ${estSubCount.toLocaleString()}`,
     description: trim(`
       **Ranking vs Last 24 Hours:** ${last24HoursRank}/24
+      **Ranking vs Last Week (Same Hour):** ${sameHourRank}/${past7DaysHourlyGains.length + 1}
       **Ranking vs All Time:** ${allTimeRank.toLocaleString()}/${(
       history.length + 1
     ).toLocaleString()}      
