@@ -1,23 +1,23 @@
-import { getHistory, getLastStats, save, updateStats } from "./utils/db";
-import { Chart, registerables } from "chart.js";
-import { createCanvas, GlobalFonts } from "@napi-rs/canvas";
-import "chartjs-adapter-date-fns";
-import { graphConfiguration } from "./utils/graph";
-import { join } from "node:path";
-import { DateTime } from "luxon";
+import { getHistory, getLastStats, save, updateStats } from './utils/db';
+import { Chart, registerables } from 'chart.js';
+import { createCanvas, GlobalFonts } from '@napi-rs/canvas';
+import 'chartjs-adapter-date-fns';
+import { graphConfiguration } from './utils/graph';
+import { join } from 'node:path';
+import { DateTime } from 'luxon';
 
 Chart.register(...registerables);
 GlobalFonts.registerFromPath(
-  join(process.cwd(), "fonts/Poppins-Medium.ttf"),
-  "PoppinsMedium"
+  join(process.cwd(), 'fonts/Poppins-Medium.ttf'),
+  'PoppinsMedium'
 );
 GlobalFonts.registerFromPath(
-  join(process.cwd(), "fonts/Poppins-ExtraBold.ttf"),
-  "PoppinsExtraBold"
+  join(process.cwd(), 'fonts/Poppins-ExtraBold.ttf'),
+  'PoppinsExtraBold'
 );
 GlobalFonts.registerFromPath(
-  join(process.cwd(), "fonts/Poppins-SemiBold.ttf"),
-  "PoppinsSemiBold"
+  join(process.cwd(), 'fonts/Poppins-SemiBold.ttf'),
+  'PoppinsSemiBold'
 );
 
 interface CommunitricsData {
@@ -46,36 +46,38 @@ interface WebhookData {
 }
 
 const gain = (gain: number, precision: number = 0) =>
-  `${gain > 0 ? "+" : ""}${parseFloat(
+  `${gain > 0 ? '+' : ''}${parseFloat(
     gain.toFixed(precision)
   ).toLocaleString()}`;
 
 function formatEasternTime(
   date: Date,
   hasTime = true,
-  timeSeparator = " ",
+  timeSeparator = ' ',
   fullTime = false,
   includeYear = false
 ) {
   return DateTime.fromJSDate(date)
-    .setZone("America/New_York")
+    .setZone('America/New_York')
     .toFormat(
-      `MMM dd${includeYear ? ', yyyy' : ''}${hasTime ? `,${timeSeparator}h${fullTime ? ":m" : ""} a` : ""}`
+      `MMM dd${includeYear ? ', yyyy' : ''}${
+        hasTime ? `,${timeSeparator}h${fullTime ? ':m' : ''} a` : ''
+      }`
     )
-    .replace(" AM", "am")
-    .replace(" PM", "pm");
+    .replace(' AM', 'am')
+    .replace(' PM', 'pm');
 }
-  
+
 function getDateInEasternTime(date: Date) {
-  return DateTime.fromJSDate(date).setZone("America/New_York").toJSDate();
+  return DateTime.fromJSDate(date).setZone('America/New_York').toJSDate();
 }
 
 const trim = (str: string) =>
   str
     .trim()
-    .split("\n")
-    .map((str) => str.trim())
-    .join("\n");
+    .split('\n')
+    .map(str => str.trim())
+    .join('\n');
 
 interface Rate {
   min?: number;
@@ -87,76 +89,76 @@ interface Rate {
 const rates: Rate[] = [
   {
     max: 4999,
-    color: "#ffffff",
+    color: '#ffffff',
   },
   {
     min: 5000,
     max: 9999,
-    emoji: "<:BronzeFire:1282650044159361044>",
-    color: "#7d5c15",
+    emoji: '<:BronzeFire:1282650044159361044>',
+    color: '#7d5c15',
   },
   {
     min: 10000,
     max: 12999,
-    emoji: "🔥",
-    color: "#f4900e",
+    emoji: '🔥',
+    color: '#f4900e',
   },
   {
     min: 13000,
     max: 15999,
-    emoji: "<:GreenFire:1244348066325073980>",
-    color: "#35f50e",
+    emoji: '<:GreenFire:1244348066325073980>',
+    color: '#35f50e',
   },
   {
     min: 16000,
     max: 19999,
-    emoji: "<:BlueFire:1244348062558584996>",
-    color: "#0d70fe",
+    emoji: '<:BlueFire:1244348062558584996>',
+    color: '#0d70fe',
   },
   {
     min: 20000,
     max: 29999,
-    emoji: "<:PinkFire:1244350814617604177>",
-    color: "#ff6eff",
+    emoji: '<:PinkFire:1244350814617604177>',
+    color: '#ff6eff',
   },
   {
     min: 30000,
     max: 49999,
-    emoji: "<:PurpleFire:1244348073686335499>",
-    color: "#a301f4",
+    emoji: '<:PurpleFire:1244348073686335499>',
+    color: '#a301f4',
   },
   {
     min: 50000,
     max: 64999,
-    emoji: "<:RedFire:1244421295408414750>",
-    color: "#f53134",
+    emoji: '<:RedFire:1244421295408414750>',
+    color: '#f53134',
   },
   {
     min: 65000,
     max: 99999,
-    emoji: "<:VoidFire:1246404685531709450>",
-    color: "#1e073f",
+    emoji: '<:VoidFire:1246404685531709450>',
+    color: '#1e073f',
   },
   {
     min: 100000,
     max: 199999,
-    emoji: "<:SuperFire:1246879449962778624>",
-    color: "#1bc6fa",
+    emoji: '<:SuperFire:1246879449962778624>',
+    color: '#1bc6fa',
   },
   {
     min: 200000,
-    emoji: "<:RainbowFire:1332699914257301535>",
-    color: "#ffff19"
+    emoji: '<:RainbowFire:1332699914257301535>',
+    color: '#ffff19',
   },
 ];
 
 function hexToDecimalColor(hexString: string) {
-  if (hexString.startsWith("#")) {
+  if (hexString.startsWith('#')) {
     hexString = hexString.slice(1);
   }
 
-  if (typeof hexString !== "string" || !/^[0-9a-fA-F]{6}$/.test(hexString)) {
-    throw new Error("Invalid hexadecimal color string");
+  if (typeof hexString !== 'string' || !/^[0-9a-fA-F]{6}$/.test(hexString)) {
+    throw new Error('Invalid hexadecimal color string');
   }
 
   const decimalValue = parseInt(hexString, 16);
@@ -175,13 +177,13 @@ export async function updateTask() {
   let response, communitricsData, estSubCount;
   try {
     response = await fetch(
-      "https://mrbeast.subscribercount.app/data"
+      'https://mrbeast.subscribercount.app/data'
       // 'https://mb.toasted.dev/count'
     );
     communitricsData = (await response.json()) as CommunitricsData;
     estSubCount = communitricsData.mrbeast;
   } catch (error) {
-    console.error("Fetch error from Communitrics API:", error);
+    console.error('Fetch error from Communitrics API:', error);
     return;
   }
 
@@ -204,7 +206,7 @@ export async function updateTask() {
       },
     ]
       .sort((a, b) => b.gained - a.gained)
-      .findIndex((d) => (d as any).current) + 1;
+      .findIndex(d => (d as any).current) + 1;
 
   const allTimeRank =
     history
@@ -214,7 +216,7 @@ export async function updateTask() {
         gained: hourlyGains,
       })
       .sort((a, b) => b.gained - a.gained)
-      .findIndex((d) => d.date === currentDate.getTime()) + 1;
+      .findIndex(d => d.date === currentDate.getTime()) + 1;
 
   history.push({
     date: new Date().getTime(),
@@ -277,138 +279,143 @@ export async function updateTask() {
     });
 
   const rate = rates.find(
-    (r) => (r.min ?? 0) <= hourlyGains && (r.max ? r.max >= hourlyGains : true)
+    r => (r.min ?? 0) <= hourlyGains && (r.max ? r.max >= hourlyGains : true)
   );
 
   const past7DaysHourlyGains = history
-    .slice(-168) 
-    .filter((d) => new Date(getDateInEasternTime(new Date(d.date))).getHours() === currentHour)
-    .map((d) => d.gained);
+    .slice(-168)
+    .filter(
+      d =>
+        new Date(getDateInEasternTime(new Date(d.date))).getHours() ===
+        currentHour
+    )
+    .map(d => d.gained);
 
   const sameHourRank =
-    [...past7DaysHourlyGains, hourlyGains].sort((a, b) => b - a).indexOf(hourlyGains) + 1;
+    [...past7DaysHourlyGains, hourlyGains]
+      .sort((a, b) => b - a)
+      .indexOf(hourlyGains) + 1;
 
-  const embedObject: Required<WebhookData>["embeds"][number] = {
+  const embedObject: Required<WebhookData>['embeds'][number] = {
     title: `${
-      rate && rate.emoji ? `${rate.emoji} ` : ""
+      rate && rate.emoji ? `${rate.emoji} ` : ''
     } Current Subscribers: ${estSubCount.toLocaleString()}`,
     description: trim(`
-      **Ranking vs Last 24 Hours:** ${last24HoursRank}/24
-      **Ranking vs Last Week (Same Hour):** ${sameHourRank}/${past7DaysHourlyGains.length + 1}
-      **Ranking vs All Time:** ${allTimeRank.toLocaleString()}/${(
-      history.length + 1
-    ).toLocaleString()}      
-      **Daily Average** ${gain(subRate * 60 * 60 * 24, 0)}
       **Hourly Gains:** ${gain(hourlyGains)} (${gain(
       hourlyGainsComparedToLast
     )}) ${
       hourlyGainsComparedToLast > 0
-        ? "⬆️"
+        ? '⬆️'
         : hourlyGainsComparedToLast === 0
-        ? ""
-        : "⬇️"
+        ? ''
+        : '⬇️'
     }
+      **Daily Average** ${gain(subRate * 60 * 60 * 24, 0)}
       **Subscribers Gained in Last 24 Hours:** ${gain(
         estSubCount - firstCountInLast24Hours.subscribers
       )}
+      **Subscribers Gained in 2025:** ${gain(estSubCount - firstCountIn2025)}
       **Subscribers Gained Since Release:** ${gain(
         estSubCount - firstData.subscribers
       )}
-      **Subscribers Gained in 2025:** ${gain(
-        estSubCount - firstCountIn2025
-      )}
+      **Ranking vs Last Day:** ${last24HoursRank}/24
+      **Ranking vs Last Week (Same Hour):** ${sameHourRank}/${
+      past7DaysHourlyGains.length
+    }
+      **Ranking vs All Time:** ${allTimeRank.toLocaleString()}/${(
+      history.length + 1
+    ).toLocaleString()}      
     `),
     fields: [
       {
-        name: "Hourly Gains, Last 12 Hours",
+        name: 'Hourly Gains, Last 12 Hours',
         value: history
           .slice(-12)
           .map((d, i) => {
             const rate = rates.find(
-              (r) =>
+              r =>
                 (r.min ?? 0) <= d.gained && (r.max ? r.max >= d.gained : true)
             );
-            return `* ${i === 11 ? "**" : ""}${formatEasternTime(
+            return `* ${i === 11 ? '**' : ''}${formatEasternTime(
               new Date(d.date)
             )}${
-              i === 11 ? "**" : ""
+              i === 11 ? '**' : ''
             }: ${d.subscribers.toLocaleString()} (${gain(d.gained)}) ${
-              rate && rate.emoji ? rate.emoji : ""
+              rate && rate.emoji ? rate.emoji : ''
             }`;
           })
-          .join("\n"),
+          .join('\n'),
       },
       {
-        name: "Daily Gains, Last 7 Days",
+        name: 'Daily Gains, Last 7 Days',
         value: dailyData
           .slice(-7)
           .map((d, i) => {
             const dt = new Date(d.date);
-            return `* ${i === 6 ? "**" : ""}${formatEasternTime(dt, false)}${
-              i === 6 ? "**" : ""
+            return `* ${i === 6 ? '**' : ''}${formatEasternTime(dt, false)}${
+              i === 6 ? '**' : ''
             }: ${d.subscribers.toLocaleString()} (${gain(d.gained)})`;
           })
-          .join("\n"),
+          .join('\n'),
       },
       {
-        name: "Top 10 Hours with Highest Gains",
+        name: 'Top 10 Hours with Highest Gains',
         value: history
           .toSorted((a, b) => b.gained - a.gained)
           .slice(0, 10)
           .map((d, index) => {
             const date = getDateInEasternTime(new Date(d.date));
             const isCurrentHour =
-              date.toISOString().split("T")[0] === currentDateAsEastern.toISOString().split("T")[0] &&
+              date.toISOString().split('T')[0] ===
+                currentDateAsEastern.toISOString().split('T')[0] &&
               date.getHours() === currentDateAsEastern.getHours();
-            return `${index + 1}. ${isCurrentHour ? "**" : ""}${formatEasternTime(
-              new Date(d.date),
-              true,
-              " ",
-              false,
-              true
-            )}${isCurrentHour ? "**" : ""}: ${gain(d.gained)}`;
+            return `${index + 1}. ${
+              isCurrentHour ? '**' : ''
+            }${formatEasternTime(new Date(d.date), true, ' ', false, true)}${
+              isCurrentHour ? '**' : ''
+            }: ${gain(d.gained)}`;
           })
-          .join("\n"),
+          .join('\n'),
       },
     ],
     footer: {
-      text: "Made by @nottca for discord.gg/mrbeastnews",
-      icon_url: "https://i.imgur.com/GcctO0B.png",
+      text: 'Made by @nottca for discord.gg/mrbeastnews',
+      icon_url: 'https://i.imgur.com/GcctO0B.png',
     },
-    color: hexToDecimalColor(rate?.color ?? "#ffffff"),
+    color: hexToDecimalColor(rate?.color ?? '#ffffff'),
   };
 
   const subHistoryGraph = await createGraph(
-    "Subscriber History Since Release",
-    history.map((d) => getDateInEasternTime(new Date(d.date))),
-    history.map((d) => d.subscribers),
+    'Subscriber History Since Release',
+    history.map(d => getDateInEasternTime(new Date(d.date))),
+    history.map(d => d.subscribers),
     255000000
   );
 
   const hourlyGainsGraph = await createGraph(
-    "Hourly Gains (Past 24 Hours)",
+    'Hourly Gains (Past 24 Hours)',
     history
       .slice(-24)
-      .map((d) => new Date(getDateInEasternTime(new Date(d.date)))),
-    history.slice(-24).map((d) => d.gained),
+      .map(d => new Date(getDateInEasternTime(new Date(d.date)))),
+    history.slice(-24).map(d => d.gained),
     undefined,
     true
   );
 
   const dailyGainsGraph = await createGraph(
-    "Subscriber History (Last 7 Days)",
+    'Subscriber History (Last 7 Days)',
     history
       .slice(-168)
-      .map((d) => new Date(getDateInEasternTime(new Date(d.date)))),
-    history.slice(-168).map((d) => d.subscribers)
+      .map(d => new Date(getDateInEasternTime(new Date(d.date)))),
+    history.slice(-168).map(d => d.subscribers)
   );
 
   const monthlyGainsGraph = await createGraph(
-    "Subscriber History (Last 30 Days)",
+    'Subscriber History (Last 30 Days)',
     history
       .slice(-720)
-      .map((d) => new Date(getDateInEasternTime(new Date(d.date)))),
-    history.slice(-720).map((d) => d.subscribers)
+      .map(d => new Date(getDateInEasternTime(new Date(d.date)))),
+    history.slice(-720).map(d => d.subscribers)
   );
 
   const last7DaysGraph = await createLast7DaysGraph(gainedLast7Days);
@@ -418,43 +425,43 @@ export async function updateTask() {
 
   const formData = new FormData();
   formData.append(
-    "payload_json",
+    'payload_json',
     JSON.stringify({
       content: `## ${formatEasternTime(currentDate, true)} EST Report`,
       attachments: [
         {
           id: 0,
-          filename: "sub_history.jpg",
+          filename: 'sub_history.jpg',
         },
         {
           id: 1,
-          filename: "hourly_gains.jpg",
+          filename: 'hourly_gains.jpg',
         },
         {
           id: 2,
-          filename: "daily_gains.jpg",
+          filename: 'daily_gains.jpg',
         },
         {
           id: 3,
-          filename: "monthly_gains.jpg",
+          filename: 'monthly_gains.jpg',
         },
         {
           id: 4,
-          filename: "last_7_days.jpg",
+          filename: 'last_7_days.jpg',
         },
       ],
       embeds: [embedObject],
     })
   );
-  formData.append("files[0]", new Blob([subHistoryGraph]), "sub_history.jpg");
-  formData.append("files[1]", new Blob([hourlyGainsGraph]), "hourly_gains.jpg");
-  formData.append("files[2]", new Blob([dailyGainsGraph]), "daily_gains.jpg");
+  formData.append('files[0]', new Blob([subHistoryGraph]), 'sub_history.jpg');
+  formData.append('files[1]', new Blob([hourlyGainsGraph]), 'hourly_gains.jpg');
+  formData.append('files[2]', new Blob([dailyGainsGraph]), 'daily_gains.jpg');
   formData.append(
-    "files[3]",
+    'files[3]',
     new Blob([monthlyGainsGraph]),
-    "monthly_gains.jpg"
+    'monthly_gains.jpg'
   );
-  formData.append("files[4]", new Blob([last7DaysGraph]), "last_7_days.jpg");
+  formData.append('files[4]', new Blob([last7DaysGraph]), 'last_7_days.jpg');
 
   const webhookUrls = [
     process.env.DISCORD_WEBHOOK_URL!,
@@ -464,9 +471,9 @@ export async function updateTask() {
   ];
 
   await Promise.all(
-    webhookUrls.map((url) =>
+    webhookUrls.map(url =>
       fetch(url, {
-        method: "POST",
+        method: 'POST',
         body: formData,
       })
     )
@@ -481,7 +488,7 @@ async function createGraph(
   isHourlyGainsGraph = false
 ) {
   const canvas = createCanvas(1200, 800);
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext('2d');
 
   const currentDate = new Date();
   const formattedDate = formatEasternTime(currentDate, true);
@@ -492,10 +499,10 @@ async function createGraph(
       labels: dates,
       datasets: [
         {
-          label: "Subscribers",
+          label: 'Subscribers',
           data: subscriberHistory,
-          backgroundColor: "rgba(45, 212, 255, 0.2)",
-          borderColor: "#2DD4FF",
+          backgroundColor: 'rgba(45, 212, 255, 0.2)',
+          borderColor: '#2DD4FF',
           borderWidth: 4,
           fill: true,
         },
@@ -509,28 +516,28 @@ async function createGraph(
 
   chart.draw();
 
-  return canvas.encode("jpeg");
+  return canvas.encode('jpeg');
 }
 
 const colors = [
-  "#b0e3f5",
-  "#9bd6eb",
-  "#85c9e0",
-  "#6cb3d5",
-  "#55a3d0",
-  "#3f94cc",
-  "#002d5b",
+  '#b0e3f5',
+  '#9bd6eb',
+  '#85c9e0',
+  '#6cb3d5',
+  '#55a3d0',
+  '#3f94cc',
+  '#002d5b',
 ];
 
 async function createLast7DaysGraph(history: [Date, number][][]) {
   const canvas = createCanvas(1200, 800);
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext('2d');
 
   const currentDate = new Date();
   const formattedDate = formatEasternTime(currentDate, false);
 
   const chartConfig = graphConfiguration(
-    "Past 7 Days Hourly Gains Comparison",
+    'Past 7 Days Hourly Gains Comparison',
     {
       labels: history[0].map(([d]) => new Date(getDateInEasternTime(d))),
       datasets: history.map((day, i) => {
@@ -539,8 +546,8 @@ async function createLast7DaysGraph(history: [Date, number][][]) {
           label:
             formatEasternTime(currentDay, false) +
             (formatEasternTime(currentDay, false) === formattedDate
-              ? `, as of ${formatEasternTime(currentDate, true).split(", ")[1]}`
-              : ""),
+              ? `, as of ${formatEasternTime(currentDate, true).split(', ')[1]}`
+              : ''),
           data: day.map(([, gain]) => gain),
           borderColor: colors[i],
           borderWidth: i === 6 ? 5 : 1,
@@ -558,5 +565,5 @@ async function createLast7DaysGraph(history: [Date, number][][]) {
 
   chart.draw();
 
-  return canvas.encode("jpeg");
+  return canvas.encode('jpeg');
 }
