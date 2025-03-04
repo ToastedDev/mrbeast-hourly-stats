@@ -311,6 +311,7 @@ export async function updateTask() {
         : '⬇️'
     }
       **Daily Average** ${gain(subRate * 60 * 60 * 24, 0)}
+    
       **Subscribers Gained in Last 24 Hours:** ${gain(
         estSubCount - firstCountInLast24Hours.subscribers
       )}
@@ -318,6 +319,7 @@ export async function updateTask() {
       **Subscribers Gained Since Release:** ${gain(
         estSubCount - firstData.subscribers
       )}
+      
       **Ranking vs Last Day:** ${last24HoursRank}/24
       **Ranking vs Last Week (Same Hour):** ${sameHourRank}/${
       past7DaysHourlyGains.length
