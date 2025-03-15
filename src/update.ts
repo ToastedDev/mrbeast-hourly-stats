@@ -442,12 +442,6 @@ export async function updateTask() {
   const mrbeastGained = estSubCount - db.subscribers;
   db.subscribers = estSubCount;
 
-  db.history.push({
-    date: new Date().getTime(),
-    subscribers: estSubCount,
-    gained: mrbeastGained,
-  });
-
   await Bun.write("./db.json", JSON.stringify(db));
 
   const formData = new FormData();
