@@ -19,7 +19,7 @@ GlobalFonts.registerFromPath(
   "PoppinsSemiBold"
 );
 
-interface Database {
+export interface Database {
   lastUpdate: number;
   subscribers: number;
   history: {

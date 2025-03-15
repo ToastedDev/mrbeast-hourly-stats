@@ -1,5 +1,5 @@
 import { exists } from "node:fs/promises";
-import type { Database } from "./src/utils/db";
+import type { Database } from "./src/update";
 
 async function main() {
   const csvFile = Bun.file("./MrBeast_Subscribers.csv");
@@ -68,7 +68,7 @@ async function main() {
         lastUpdate: hourlyData[hourlyData.length - 1].date,
         subscribers: lastSubscribers,
         history: hourlyData,
-      } satisfies Database),
+      } satisfies Database)
     );
   }
 
